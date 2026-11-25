@@ -30,7 +30,7 @@ public class RocketRenderer extends EntityRenderer<RocketEntity> {
         int t = e.getLaunchTicks();
         if (t > RocketEntity.COUNTDOWN - 30) {   // लॉन्च से ठीक पहले और उड़ान में हल्का कंपन
             float s = t < RocketEntity.COUNTDOWN ? 0.02F : 0.04F;
-            ps.translate((e.getRandom().nextFloat() - 0.5F) * s, 0, (e.getRandom().nextFloat() - 0.5F) * s);
+            ps.translate((e.level().random.nextFloat() - 0.5F) * s, 0, (e.level().random.nextFloat() - 0.5F) * s);
         }
         // इंजन
         block(ps, buf, light, Blocks.POLISHED_BLACKSTONE, 0, 0, 0.9F, 0.6F);

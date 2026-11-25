@@ -15,14 +15,19 @@ public class OrbitalStrikeMod {
     public OrbitalStrikeMod() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.ITEMS.register(modBus);
+        ModEntities.ENTITIES.register(modBus);
         modBus.addListener(this::addToCreativeTab);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
-        // StrikeManager खुद @Mod.EventBusSubscriber से रजिस्टर होता है
     }
 
     private void addToCreativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(ModItems.ORBITAL_CANNON.get());
+        }
+        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            for (Destination d : Destination.values()) {
+                event.accept(RocketItem.create(d));
+            }
         }
     }
 }

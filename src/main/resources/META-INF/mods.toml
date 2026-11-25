@@ -4,8 +4,8 @@ license="MIT"
 
 [[mods]]
 modId="orbitalstrike"
-version="1.0.0"
-displayName="Orbital Strike"
+version="2.0.0"
+displayName="Orbital Strike: Galaxy"
 authors="You"
 description='''
 GTA-style Orbital Cannon! Lock a target, wait for the countdown, and watch the sky fall.

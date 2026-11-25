@@ -1,0 +1,13 @@
+{
+  "type": "orbitalstrike:space",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "orbitalstrike:space",
+      "layers": [],
+      "lakes": false,
+      "features": false,
+      "structure_overrides": []
+    }
+  }
+}

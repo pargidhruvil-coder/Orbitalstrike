@@ -1,0 +1,11 @@
+{
+  "type": "orbitalstrike:mars",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "orbitalstrike:mars",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "orbitalstrike:mars"
+    }
+  }
+}

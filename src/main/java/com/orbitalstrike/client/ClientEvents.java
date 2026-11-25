@@ -1,0 +1,195 @@
+package com.orbitalstrike.client;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import com.orbitalstrike.Config;
+import com.orbitalstrike.OrbitalCannonItem;
+import com.orbitalstrike.OrbitalStrikeMod;
+import com.orbitalstrike.RocketEntity;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ComputeFovModifierEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.ViewportEvent;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+/**
+ * सिनेमैटिक: लॉन्च पर थर्ड-पर्सन कैमरा, स्क्रीन शेक, फ़िल्मी काली पट्टियाँ, FOV, पहुँचने पर सफ़ेद फ़्लैश।
+ * और पृथ्वी के रात वाले आसमान में मिल्की-वे।
+ */
+@Mod.EventBusSubscriber(modid = OrbitalStrikeMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+public class ClientEvents {
+    private static float shake = 0, bars = 0, prevBars = 0, flash = 0, prevFlash = 0;
+    private static int arrivalTicks = 0;
+    private static CameraType savedCamera = null;
+    private static ResourceKey<Level> lastDim = null;
+
+    public static void addShake(float amount) {
+        shake = Math.min(3.0F, shake + amount);
+    }
+
+    private static boolean cinematicOn() {
+        return Config.CINEMATIC.get();
+    }
+
+    private static RocketEntity launchingRocket(LocalPlayer p) {
+        if (p != null && p.getVehicle() instanceof RocketEntity r && r.getLaunchTicks() >= 0) return r;
+        return null;
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer p = mc.player;
+        prevBars = bars;
+        prevFlash = flash;
+        if (p == null) { lastDim = null; return; }
+
+        RocketEntity rocket = launchingRocket(p);
+        boolean cine = cinematicOn();
+
+        // कैमरा: लॉन्च के दौरान थर्ड-पर्सन
+        if (rocket != null && cine && savedCamera == null) {
+            savedCamera = mc.options.getCameraType();
+            mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+        } else if (rocket == null && savedCamera != null && arrivalTicks <= 0) {
+            mc.options.setCameraType(savedCamera);
+            savedCamera = null;
+        }
+
+        // शेक
+        if (rocket != null) {
+            int t = rocket.getLaunchTicks();
+            float target = t < RocketEntity.COUNTDOWN ? (t / (float) RocketEntity.COUNTDOWN) * 0.35F : 1.4F;
+            shake = Math.max(shake, target);
+        }
+
+        // नई दुनिया में पहुँचे -> फ़्लैश + पट्टियाँ
+        ResourceKey<Level> dim = p.level().dimension();
+        if (lastDim != null && dim != lastDim) {
+            flash = 1.0F;
+            arrivalTicks = 110;
+            addShake(1.5F);
+        }
+        lastDim = dim;
+        if (arrivalTicks > 0) arrivalTicks--;
+        if (arrivalTicks == 1 && savedCamera != null && rocket == null) {
+            mc.options.setCameraType(savedCamera);
+            savedCamera = null;
+        }
+
+        float barTarget = cine && (rocket != null || arrivalTicks > 0) ? 1F : 0F;
+        bars += (barTarget - bars) * 0.12F;
+        flash *= 0.92F;
+        shake *= 0.9F;
+        if (shake < 0.01F) shake = 0;
+    }
+
+    @SubscribeEvent
+    public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+        if (shake <= 0 || !cinematicOn()) return;
+        double time = (Minecraft.getInstance().level != null ? Minecraft.getInstance().level.getGameTime() : 0) + event.getPartialTick();
+        float s = shake;
+        event.setPitch(event.getPitch() + (float) (Math.sin(time * 1.9) * 0.9 + Math.sin(time * 3.7) * 0.5) * s);
+        event.setYaw(event.getYaw() + (float) (Math.cos(time * 2.3) * 0.8 + Math.sin(time * 4.1) * 0.4) * s);
+        event.setRoll(event.getRoll() + (float) Math.sin(time * 1.3) * 1.2F * s);
+    }
+
+    @SubscribeEvent
+    public static void onFov(ComputeFovModifierEvent event) {
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        // गन चार्ज करते समय ज़ूम
+        if (p.isUsingItem() && p.getUseItem().getItem() instanceof OrbitalCannonItem) {
+            float c = OrbitalCannonItem.chargeProgress(p);
+            event.setNewFovModifier(event.getNewFovModifier() * (1.0F - 0.55F * c));
+        }
+        RocketEntity r = launchingRocket(p);
+        if (r != null && r.getLaunchTicks() >= RocketEntity.COUNTDOWN && cinematicOn()) {
+            event.setNewFovModifier(event.getNewFovModifier() * 1.2F);
+        }
+    }
+
+    /** ऑर्बिटल स्ट्राइक का धमाका पास में हो तो स्क्रीन हिले */
+    @SubscribeEvent
+    public static void onSound(PlaySoundEvent event) {
+        SoundInstance s = event.getSound();
+        if (s == null) return;
+        ResourceLocation id = s.getLocation();
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        double dist = Math.sqrt(p.distanceToSqr(s.getX(), s.getY(), s.getZ()));
+        if (id.equals(SoundEvents.WARDEN_SONIC_BOOM.getLocation()) && dist < 160) {
+            addShake((float) (2.6 * (1.0 - dist / 160.0)));
+            if (dist < 60) flash = Math.max(flash, (float) (0.8 * (1.0 - dist / 60.0)));
+        } else if (id.equals(SoundEvents.GENERIC_EXPLODE.getLocation()) && dist < 40) {
+            addShake((float) (0.5 * (1.0 - dist / 40.0)));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onOverlay(RenderGuiOverlayEvent.Pre event) {
+        if (bars < 0.5F) return;
+        ResourceLocation id = event.getOverlay().id();
+        if (id.equals(VanillaGuiOverlay.HOTBAR.id()) || id.equals(VanillaGuiOverlay.PLAYER_HEALTH.id())
+                || id.equals(VanillaGuiOverlay.FOOD_LEVEL.id()) || id.equals(VanillaGuiOverlay.EXPERIENCE_BAR.id())
+                || id.equals(VanillaGuiOverlay.ARMOR_LEVEL.id()) || id.equals(VanillaGuiOverlay.CROSSHAIR.id())
+                || id.equals(VanillaGuiOverlay.AIR_LEVEL.id()) || id.equals(VanillaGuiOverlay.MOUNT_HEALTH.id())
+                || id.equals(VanillaGuiOverlay.JUMP_BAR.id()) || id.equals(VanillaGuiOverlay.ITEM_NAME.id())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGui(RenderGuiEvent.Post event) {
+        float pt = event.getPartialTick();
+        float b = Mth.lerp(pt, prevBars, bars);
+        float f = Mth.lerp(pt, prevFlash, flash);
+        GuiGraphics g = event.getGuiGraphics();
+        int w = g.guiWidth(), h = g.guiHeight();
+        if (b > 0.01F) {
+            int bh = (int) (h * 0.11F * b);
+            g.fill(0, 0, w, bh, 0xFF000000);
+            g.fill(0, h - bh, w, h, 0xFF000000);
+        }
+        if (f > 0.01F) {
+            int a = (int) (Mth.clamp(f, 0, 1) * 255);
+            g.fill(0, 0, w, h, (a << 24) | 0xFFFFFF);
+        }
+    }
+
+    /** पृथ्वी की रात में मिल्की-वे */
+    @SubscribeEvent
+    public static void onRenderStage(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY) return;
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null || level.dimension() != Level.OVERWORLD || !Config.OVERWORLD_GALAXY.get()) return;
+        float pt = event.getPartialTick();
+        float alpha = level.getStarBrightness(pt) * (1.0F - level.getRainLevel(pt)) * 1.8F;
+        if (alpha <= 0.02F) return;
+        PoseStack ps = event.getPoseStack();
+        ps.pushPose();
+        ps.mulPose(Axis.YP.rotationDegrees(-90.0F));
+        ps.mulPose(Axis.XP.rotationDegrees(level.getTimeOfDay(pt) * 360.0F));
+        GalaxySkyRenderer.renderSkybox(ps, Math.min(alpha, 0.9F), true);
+        ps.popPose();
+        com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
+    }
+}

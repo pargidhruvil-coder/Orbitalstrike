@@ -12,4 +12,7 @@ public class ModItems {
 
     public static final RegistryObject<Item> ORBITAL_CANNON = ITEMS.register("orbital_cannon",
             () -> new OrbitalCannonItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
+
+    public static final RegistryObject<Item> ROCKET = ITEMS.register("rocket",
+            () -> new RocketItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
 }

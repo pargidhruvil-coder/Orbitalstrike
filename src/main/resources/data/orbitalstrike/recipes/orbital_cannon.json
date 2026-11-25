@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " E ",
+    "DND",
+    "IRI"
+  ],
+  "key": {
+    "E": { "item": "minecraft:end_crystal" },
+    "D": { "item": "minecraft:diamond" },
+    "N": { "item": "minecraft:nether_star" },
+    "I": { "item": "minecraft:iron_block" },
+    "R": { "item": "minecraft:redstone_block" }
+  },
+  "result": { "item": "orbitalstrike:orbital_cannon" }
+}

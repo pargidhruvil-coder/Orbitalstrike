@@ -1,0 +1,9 @@
+{
+  "item.orbitalstrike.orbital_cannon": "Orbital Cannon Remote",
+  "orbitalstrike.tooltip.1": "Right-click to lock a target from orbit",
+  "orbitalstrike.tooltip.2": "Extremely destructive!",
+  "orbitalstrike.msg.no_target": "No target in range!",
+  "orbitalstrike.msg.locked": "[SATELLITE] Target locked at %s, %s, %s",
+  "orbitalstrike.msg.countdown": "⚠ ORBITAL STRIKE INCOMING: %s ⚠",
+  "orbitalstrike.msg.impact": "★ IMPACT CONFIRMED ★"
+}

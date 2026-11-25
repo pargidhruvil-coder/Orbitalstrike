@@ -1,0 +1,9 @@
+{
+  "item.orbitalstrike.orbital_cannon": "ऑर्बिटल कैनन रिमोट",
+  "orbitalstrike.tooltip.1": "राइट-क्लिक करके अंतरिक्ष से टारगेट लॉक करो",
+  "orbitalstrike.tooltip.2": "बेहद विनाशकारी!",
+  "orbitalstrike.msg.no_target": "रेंज में कोई टारगेट नहीं!",
+  "orbitalstrike.msg.locked": "[सैटेलाइट] टारगेट लॉक: %s, %s, %s",
+  "orbitalstrike.msg.countdown": "⚠ ऑर्बिटल स्ट्राइक आ रही है: %s ⚠",
+  "orbitalstrike.msg.impact": "★ इम्पैक्ट कन्फर्म ★"
+}

@@ -1,0 +1,146 @@
+{
+  "access": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:access",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.access"
+  },
+  "alarm": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:alarm",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.alarm"
+  },
+  "align": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:align",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.align"
+  },
+  "beam": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:beam",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.beam"
+  },
+  "blip": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:blip",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.blip"
+  },
+  "charge": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:charge",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.charge"
+  },
+  "comm_ring": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:comm_ring",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.comm_ring"
+  },
+  "divine": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:divine",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.divine"
+  },
+  "fire": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:fire",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.fire"
+  },
+  "fizzle": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:fizzle",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.fizzle"
+  },
+  "impact": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:impact",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.impact"
+  },
+  "keypad": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:keypad",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.keypad"
+  },
+  "lock": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:lock",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.lock"
+  },
+  "ready": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:ready",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.ready"
+  },
+  "vajra": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:vajra",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.vajra"
+  },
+  "voice": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:voice",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.voice"
+  }
+}

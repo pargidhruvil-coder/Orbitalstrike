@@ -44,6 +44,50 @@ public class ClientEvents {
         shake = Math.min(3.0F, shake + amount);
     }
 
+    public static void flash(float amount) {
+        flash = Math.max(flash, amount);
+        prevFlash = flash;
+    }
+
+    public static void renderFlash(GuiGraphics g, float pt) {
+        float f = Mth.lerp(pt, prevFlash, flash);
+        if (f > 0.01F) {
+            int a = (int) (Mth.clamp(f, 0, 1) * 255);
+            g.fill(0, 0, g.guiWidth(), g.guiHeight(), (a << 24) | 0xFFFFFF);
+        }
+    }
+
+    private static final ResourceLocation SCOPE = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/gui/scope.png");
+
+    /** गन चार्ज करते समय स्कोप, रेंज, लॉक और चार्ज बार */
+    private static void renderScope(GuiGraphics g, float pt) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer p = mc.player;
+        if (p == null || !p.isUsingItem() || !(p.getUseItem().getItem() instanceof OrbitalCannonItem) || CinematicDirector.isActive()) return;
+        int w = g.guiWidth(), h = g.guiHeight();
+        float c = OrbitalCannonItem.chargeProgress(p);
+        int size = (int) (Math.min(w, h) * (1.25F - 0.15F * c));
+        int x = (w - size) / 2, y = (h - size) / 2;
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        g.blit(SCOPE, x, y, 0, 0, size, size, size, size);
+        if (x > 0) { g.fill(0, 0, x, h, 0xFF000000); g.fill(x + size, 0, w, h, 0xFF000000); }
+        if (y > 0) { g.fill(0, 0, w, y, 0xFF000000); g.fill(0, y + size, w, h, 0xFF000000); }
+        net.minecraft.world.phys.HitResult hit = p.pick(Config.RANGE.get(), pt, false);
+        boolean locked = hit.getType() != net.minecraft.world.phys.HitResult.Type.MISS;
+        int dist = locked ? (int) Math.round(hit.getLocation().distanceTo(p.getEyePosition(pt))) : 0;
+        net.minecraft.network.chat.Component range = net.minecraft.network.chat.Component.translatable("hud.orbitalstrike.range", locked ? dist : "---");
+        g.drawCenteredString(mc.font, range, w / 2, h / 2 + 24, 0x7FE7FF);
+        if (locked) {
+            boolean blink = (p.tickCount / 4) % 2 == 0 || c >= 1;
+            if (blink) g.drawCenteredString(mc.font, net.minecraft.network.chat.Component.translatable("hud.orbitalstrike.lock"), w / 2, h / 2 - 32, c >= 1 ? 0xFF4040 : 0xFFD040);
+        }
+        int bw = 120, bx = w / 2 - bw / 2, by = h / 2 + 38;
+        g.fill(bx - 1, by - 1, bx + bw + 1, by + 5, 0xFF7FE7FF);
+        g.fill(bx, by, bx + bw, by + 4, 0xFF101820);
+        g.fill(bx, by, bx + (int) (bw * c), by + 4, c >= 1 ? 0xFFFFC040 : 0xFFB060FF);
+        if (c >= 1) g.drawCenteredString(mc.font, net.minecraft.network.chat.Component.translatable("orbitalstrike.msg.ready"), w / 2, by + 9, 0xFFD040);
+    }
+
     private static boolean cinematicOn() {
         return Config.CINEMATIC.get();
     }
@@ -146,6 +190,16 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onOverlay(RenderGuiOverlayEvent.Pre event) {
+        if (CinematicDirector.isActive()) {
+            event.setCanceled(true);
+            return;
+        }
+        Minecraft mcx = Minecraft.getInstance();
+        if (mcx.player != null && mcx.player.isUsingItem() && mcx.player.getUseItem().getItem() instanceof OrbitalCannonItem
+                && event.getOverlay().id().equals(VanillaGuiOverlay.CROSSHAIR.id())) {
+            event.setCanceled(true);
+            return;
+        }
         if (bars < 0.5F) return;
         ResourceLocation id = event.getOverlay().id();
         if (id.equals(VanillaGuiOverlay.HOTBAR.id()) || id.equals(VanillaGuiOverlay.PLAYER_HEALTH.id())
@@ -160,6 +214,8 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onGui(RenderGuiEvent.Post event) {
         float pt = event.getPartialTick();
+        if (CinematicDirector.isActive()) return;
+        renderScope(event.getGuiGraphics(), pt);
         float b = Mth.lerp(pt, prevBars, bars);
         float f = Mth.lerp(pt, prevFlash, flash);
         GuiGraphics g = event.getGuiGraphics();

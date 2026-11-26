@@ -136,6 +136,26 @@ public final class FxDraw {
         Tesselator.getInstance().end();
     }
 
+    /** दीवार पर लगी (स्थिर दिशा वाली) चौकोर स्क्रीन, कैमरा-सापेक्ष निर्देशांक */
+    public static void wallQuad(PoseStack ps, ResourceLocation tex, double cx, double cy, double cz, float yawDeg, float half,
+                                float rollDeg, float r, float g, float b, float a) {
+        ps.pushPose();
+        ps.translate(cx, cy, cz);
+        ps.mulPose(Axis.YP.rotationDegrees(yawDeg));
+        if (rollDeg != 0) ps.mulPose(Axis.ZP.rotationDegrees(rollDeg));
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, tex);
+        Matrix4f m = ps.last().pose();
+        BufferBuilder bb = Tesselator.getInstance().getBuilder();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        bb.vertex(m, -half, -half, 0).uv(0, 1).color(r, g, b, a).endVertex();
+        bb.vertex(m, half, -half, 0).uv(1, 1).color(r, g, b, a).endVertex();
+        bb.vertex(m, half, half, 0).uv(1, 0).color(r, g, b, a).endVertex();
+        bb.vertex(m, -half, half, 0).uv(0, 0).color(r, g, b, a).endVertex();
+        Tesselator.getInstance().end();
+        ps.popPose();
+    }
+
     /** कैमरे की तरफ़ मुँह वाला चौकोर */
     public static void billboard(PoseStack ps, Camera cam, Vec3 pos, float size, ResourceLocation tex,
                                  float r, float g, float b, float a, float roll) {

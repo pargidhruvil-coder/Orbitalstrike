@@ -27,7 +27,7 @@ public final class Timeline {
 
     public static Timeline of(int mode) {
         return switch (mode) {
-            case LONG -> new Timeline(LONG, 800, 22, 30, 1040, 1240, 1420);
+            case LONG -> new Timeline(LONG, 860, 22, 30, 1100, 1300, 1480);
             case MEDIUM -> new Timeline(MEDIUM, 0, 10, 24, 140, 270, 410);
             default -> new Timeline(SHORT, 0, 4, 22, -1, 80, 150);
         };
@@ -36,6 +36,7 @@ public final class Timeline {
     /** लंबे मोड के सीन: अंतरिक्ष -> शिप की ओर उड़ान -> शिप के अंदर */
     public static final int APPROACH_START = 110;
     public static final int INTERIOR_START = 250;
+    public static final int ORBIT_START = 800;   // अंतरिक्ष से पृथ्वी पर निशाना
 
     public int planetArrive(int i) {
         return planetsStart + i * planetStep + planetFly;

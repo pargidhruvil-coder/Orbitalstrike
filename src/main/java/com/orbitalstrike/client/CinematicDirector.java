@@ -44,7 +44,7 @@ public class CinematicDirector {
 
     private record Shot(int start, Vec3 from, Vec3 to, Vec3 lookFrom, Vec3 lookTo) {}
 
-    private enum Phase { SPACE, APPROACH, INTERIOR, PLANETS, SHIP, IMPACT, END }
+    private enum Phase { SPACE, APPROACH, INTERIOR, ORBIT, PLANETS, SHIP, IMPACT, END }
 
     // अंतरिक्ष वाले सीन में शिप की जगह और पैमाना
     private static final Vec3 SHIP = new Vec3(-30, -12, -260);
@@ -127,11 +127,13 @@ public class CinematicDirector {
             lines.add(new Line(262, 70, "zara", za, "z1"));
             lines.add(new Line(345, 70, "zoro", zo, "z2"));
             lines.add(new Line(425, 62, "zara", za, "z3"));
-            lines.add(new Line(495, 70, "zoro", zo, "z4"));
-            lines.add(new Line(538, 32, "zoro", zo, "z5"));
+            lines.add(new Line(488, 30, "zoro", zo, "z4"));
+            lines.add(new Line(519, 20, "zoro", zo, "z4b"));
+            lines.add(new Line(540, 32, "zara", za, "z5"));
             lines.add(new Line(605, 60, "zoro", zo, "z6"));
             lines.add(new Line(692, 45, "zara", za, "z7"));
             lines.add(new Line(742, 55, "zoro", zo, "z8"));
+            lines.add(new Line(802, 50, "zara", za, "z8b"));
             lines.add(new Line(tl.vajraStart + 20, 70, "zara", za, "z9"));
             lines.add(new Line(tl.impact - 45, 45, "zara", za, "z10"));
 
@@ -157,7 +159,8 @@ public class CinematicDirector {
         if (tl.mode == Timeline.LONG && a < tl.planetsStart) {
             if (a < Timeline.APPROACH_START) return Phase.SPACE;
             if (a < Timeline.INTERIOR_START) return Phase.APPROACH;
-            return Phase.INTERIOR;
+            if (a < Timeline.ORBIT_START) return Phase.INTERIOR;
+            return Phase.ORBIT;
         }
         int planetsEnd = tl.vajraStart >= 0 ? tl.vajraStart : tl.impact - 30;
         if (a < planetsEnd) return Phase.PLANETS;
@@ -207,6 +210,10 @@ public class CinematicDirector {
             if (t >= 500 && t < 690 && (t - 500) % 48 == 0) play(ModSounds.ALARM.get(), 1F, 0.7F);
             if (t == 610 || t == 625 || t == 640 || t == 655) play(ModSounds.KEYPAD.get(), 1F, 1F);
             if (t == 680) play(ModSounds.ACCESS.get(), 1F, 1F);
+            if (t == 512) play(SoundEvents.PLAYER_BIG_FALL, 0.8F, 1F);
+            if (t == 800) play(ModSounds.WHOOSH.get(), 0.6F, 1F);
+            if (t == 812) play(ModSounds.SHIP_CHARGE.get(), 1.4F, 0.8F);
+            if (t == 840) { play(ModSounds.FIRE.get(), 0.6F, 1F); ClientEvents.addShake(1.5F); }
             if (t == 560) {
                 play(ModSounds.BUTTON.get(), 1F, 1F);
                 ClientEvents.addShake(1.6F);
@@ -284,6 +291,12 @@ public class CinematicDirector {
                 rotTo(eye, eye.add(s.lookFrom.lerp(s.lookTo, p).subtract(sc)), cut || shotCut);
                 return;
             }
+            case ORBIT -> {
+                sceneSet(Vec3.ZERO, cut);
+                float p = ease((a - Timeline.ORBIT_START) / 60F);
+                setCam(eye, 4 + p * 4, 30 + p * 4, cut);
+                return;
+            }
             case PLANETS -> {
                 float p = Mth.clamp((a - tl.planetsStart) / (float) Math.max(1, tl.alignedAt - tl.planetsStart), 0, 1);
                 float after = Mth.clamp((a - tl.alignedAt) / 60F, 0, 1);
@@ -293,13 +306,26 @@ public class CinematicDirector {
                 look = T.add(0, 35 + ease(p) * 70 + after * 15, 0);
             }
             case SHIP -> {
-                // टारगेट के पीछे नीचे से, ऊपर विशाल VIP की ओर
                 Vec3 gp = fx.giantPos(0);
                 Vec3 g = gp != null ? gp : T.add(40, 0, 0);
                 Vec3 away = new Vec3(T.x - g.x, 0, T.z - g.z).normalize();
-                float p = ease((a - tl.vajraStart) / (float) Math.max(1, tl.impact - 30 - tl.vajraStart));
-                pos = T.add(away.scale(26 - p * 6)).add(away.yRot((float) Math.PI / 2).scale(8)).add(0, 3 + p * 2, 0);
-                look = g.add(0, ClientFx.StrikeFx.GIANT * (1.5 - p * 0.3), 0);
+                float G = ClientFx.StrikeFx.GIANT;
+                if (a < tl.impact - 70) {
+                    // टारगेट के पीछे नीचे से, ऊपर विशाल VIP की ओर
+                    float p = ease((a - tl.vajraStart) / (float) Math.max(1, tl.impact - 70 - tl.vajraStart));
+                    pos = T.add(away.scale(26 - p * 6)).add(away.yRot((float) Math.PI / 2).scale(8)).add(0, 3 + p * 2, 0);
+                    look = g.add(0, G * (1.5 - p * 0.3), 0);
+                } else {
+                    // चेहरे का क्लोज़-अप (स्पीड-लाइन्स के साथ)
+                    boolean first = lastShot != Phase.SHIP;
+                    lastShot = Phase.SHIP;
+                    float p = ease((a - (tl.impact - 70)) / 40F);
+                    Vec3 face = g.add(0, G * 1.72, 0);
+                    pos = face.add(away.scale(G * 0.25 + 26 - p * 10)).add(0, -2 + p, 0);
+                    look = face;
+                    setCam(pos, yawTo(pos, look), pitchTo(pos, look), cut || first);
+                    return;
+                }
             }
             case IMPACT -> {
                 double ang = baseAng + Math.toRadians((a - (tl.impact - 30)) * 0.25);
@@ -364,6 +390,10 @@ public class CinematicDirector {
         Phase ph = d.phase((int) t);
         Vec3 sc = d.sceneCamO.lerp(d.sceneCam, pt);
         boolean interior = ph == Phase.INTERIOR;
+        if (ph == Phase.ORBIT) {
+            d.renderOrbit(ps, camera, t);
+            return;
+        }
 
         // पृष्ठभूमि: गैलेक्सी, फिर 3D पृथ्वी और चाँद, सूरज
         RenderSystem.disableDepthTest();
@@ -409,6 +439,54 @@ public class CinematicDirector {
         }
     }
 
+    /** अंतरिक्ष से पृथ्वी पर निशाना: 3D पृथ्वी, लाल टारगेट, ऊपर शिप की तोप, फिर बीम */
+    private void renderOrbit(PoseStack ps, Camera camera, float t) {
+        float o = t - Timeline.ORBIT_START;
+        RenderSystem.disableDepthTest();
+        GalaxySkyRenderer.renderSkybox(ps, 1.0F, false);
+        Vec3 c = camera.getPosition();
+        Vec3 sunDir = dir(300, -15);
+        RenderSystem.clear(256, Minecraft.ON_OSX);
+        FxDraw.beginOpaque();
+        Vec3 earth = c.add(dir(6, 38).scale(100));
+        FxDraw.sphere(ps, camera, earth, 52, FxDraw.fx("map_earth"), 40 + o * 0.15F, 23, sunDir, false, 1);
+        FxDraw.end();
+        Vec3 toCam = c.subtract(earth).normalize();
+        Vec3 mark = earth.add(toCam.scale(52.5));
+        float pulse = 1 + 0.15F * Mth.sin(o * 0.6F);
+        FxDraw.begin(true);
+        FxDraw.billboard(ps, camera, earth, 60, FxDraw.fx("glow"), 0.35F, 0.6F, 1F, 0.35F, 0);
+        FxDraw.billboard(ps, camera, mark, 7 * pulse, FxDraw.fx("ring"), 1F, 0.15F, 0.15F, 0.95F, o * 3);
+        FxDraw.billboard(ps, camera, mark, 3.5F * pulse, FxDraw.fx("ring"), 1F, 0.3F, 0.3F, 0.9F, -o * 5);
+        FxDraw.billboard(ps, camera, mark, 1.2F, FxDraw.fx("glow"), 1F, 0.2F, 0.2F, 1F, 0);
+        FxDraw.end();
+        // ऊपर शिप का निचला हिस्सा और तोप
+        RenderSystem.clear(256, Minecraft.ON_OSX);
+        RenderSystem.enableDepthTest();
+        MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
+        Vec3 shipLocal = new Vec3(0, 2, 34);
+        ps.pushPose();
+        ps.translate(shipLocal.x, shipLocal.y, shipLocal.z);
+        ps.mulPose(Axis.YP.rotationDegrees(90));
+        float glow = Mth.clamp((o - 12) / 28F, 0, 1);
+        ShipModel.render(ps, buf, 3.0F, 0, glow, ((int) (t / 8)) % 2 == 0);
+        ps.popPose();
+        buf.endBatch();
+        Vec3 gun = c.add(shipLocal).add(ShipModel.cannonWorld(Vec3.ZERO, 90, 3.0F));
+        FxDraw.begin(true);
+        FxDraw.billboard(ps, camera, gun, 2 + glow * 10, FxDraw.fx("glow"), 0.75F, 0.4F, 1F, 0.4F + glow * 0.6F, 0);
+        if (o >= 40) {        // बीम: तोप से पृथ्वी तक
+            float b = Mth.clamp((o - 40) / 4F, 0, 1);
+            for (int i = 0; i <= 40; i++) {
+                Vec3 pnt = gun.lerp(mark, i / 40.0);
+                FxDraw.billboard(ps, camera, pnt, 2.5F * b, FxDraw.fx("glow"), 0.85F, 0.6F, 1F, 0.9F, 0);
+                FxDraw.billboard(ps, camera, pnt, 1.1F * b, FxDraw.fx("glow"), 1F, 1F, 1F, 1F, 0);
+            }
+            FxDraw.billboard(ps, camera, mark, 14 * b, FxDraw.fx("glow"), 1F, 0.9F, 0.8F, 1F, 0);
+        }
+        FxDraw.end();
+    }
+
     private static void box(PoseStack ps, MultiBufferSource buf, Block b, double x, double y, double z, double sx, double sy, double sz) {
         FxDraw.box(ps, buf, b, (float) x, (float) y, (float) z, (float) sx, (float) sy, (float) sz);
     }
@@ -435,6 +513,17 @@ public class CinematicDirector {
             double cx = s * 1.4;
             FxDraw.panel(ps, FxDraw.fx("panel_screen"), cx - 0.8, 0.95, -2.93, 1.6, 0, 0, 0, 0.7, 0, 1, 1, rr, gg, bb);
         }
+        FxDraw.end();
+        // होलोग्राम रडार स्क्रीन (दीवारों पर और खिड़की के ऊपर)
+        FxDraw.begin(true);
+        RenderSystem.enableDepthTest();
+        float hp = 0.85F + 0.15F * Mth.sin(t * 0.3F);
+        FxDraw.wallQuad(ps, FxDraw.fx("holo_radar"), -3.85, 2.2, -0.8, 90, 1.3F, 0, 0.6F, 1F, 0.7F, hp);
+        FxDraw.wallQuad(ps, FxDraw.fx("holo_sweep"), -3.84, 2.2, -0.8, 90, 1.3F, -t * 6, 0.6F, 1F, 0.7F, 0.9F);
+        FxDraw.wallQuad(ps, FxDraw.fx("holo_radar"), 3.85, 2.2, -0.8, -90, 1.3F, 0, 0.6F, 1F, 0.7F, hp);
+        FxDraw.wallQuad(ps, FxDraw.fx("holo_sweep"), 3.84, 2.2, -0.8, -90, 1.3F, -t * 6, 0.6F, 1F, 0.7F, 0.9F);
+        FxDraw.wallQuad(ps, FxDraw.fx("holo_radar"), 3.85, 2.2, 2.2, -90, 0.9F, 0, alarmOn ? 1F : 0.5F, alarmOn ? 0.3F : 0.8F, 1F, hp);
+        FxDraw.wallQuad(ps, FxDraw.fx("holo_radar"), 0, 2.15, -3.2, 0, 0.75F, t * 0.5F, 0.6F, 1F, 0.8F, 0.55F);
         FxDraw.end();
         RenderSystem.enableDepthTest();
         box(ps, buf, Blocks.VERDANT_FROGLIGHT, -3.9, 0.0, -4, 0.1, 0.05, 8);
@@ -482,14 +571,14 @@ public class CinematicDirector {
     }
 
     // ---------------------------------------------------------------- एलियन की दौड़ (रास्ते: {समय, x, z})
+    // ZORO = Crazy Gamer (गिरता है, फिर कोड डालता है), ZARA = VIP Dhruvil (भागकर बटन दबाता है)
     private static final float[][] ZORO_PATH = {
-            {0, 1.4F, -1.6F}, {520, 1.4F, -1.6F}, {534, 2.4F, -0.3F}, {550, 2.75F, 0.6F},       // भागकर बटन तक
-            {574, 2.75F, 0.6F}, {585, 1.6F, -0.6F}, {598, -1.4F, -1.9F},                         // भागकर कीपैड तक
-            {730, -1.4F, -1.9F}, {742, 0, -0.8F}, {2000, 0, -0.8F}};                              // बीच में आकर चिल्लाना
+            {0, 1.4F, -1.6F}, {506, 1.4F, -1.6F}, {512, 1.0F, -0.7F},                            // ठोकर खाकर गिरना
+            {548, 1.0F, -0.7F}, {562, 0.0F, -1.3F}, {598, -1.4F, -1.9F},                          // उठकर कीपैड तक
+            {730, -1.4F, -1.9F}, {742, 0, -0.8F}, {2000, 0, -0.8F}};
     private static final float[][] ZARA_PATH = {
-            {0, -1.4F, -1.6F}, {505, -1.4F, -1.6F}, {518, -2.6F, 0.4F}, {534, -1.0F, 2.7F},     // घबराकर चक्कर
-            {550, 1.2F, 2.5F}, {566, 0.2F, 1.0F}, {582, -2.7F, 2.4F},                            // कोने में छुपना
-            {678, -2.7F, 2.4F}, {692, -1.4F, -0.4F}, {2000, -1.4F, -0.4F}};
+            {0, -1.4F, -1.6F}, {515, -1.4F, -1.6F}, {530, 0.3F, 0.3F}, {550, 2.75F, 0.6F},        // भागकर बटन तक
+            {574, 2.75F, 0.6F}, {590, 1.2F, -1.0F}, {678, 1.2F, -1.0F}, {692, -1.4F, -0.4F}, {2000, -1.4F, -0.4F}};
 
     private static Vec3 path(float[][] p, float t) {
         for (int i = 0; i < p.length - 1; i++) {
@@ -514,16 +603,17 @@ public class CinematicDirector {
         return (float) path(p, t + 1).distanceTo(path(p, t - 1)) * 0.5F;
     }
 
-    private float zoroYaw(float t) {
-        if (t >= 550 && t < 578) return -90;          // बटन की तरफ़ (+X)
-        if (t >= 598 && t < 730) return 180;          // कीपैड की तरफ़
-        if (t >= 742) return 0;                        // कैमरे की तरफ़
+    private float zoroYaw(float t) {          // Crazy Gamer
+        if (t >= 506 && t < 560) return 150;
+        if (t >= 598 && t < 730) return 180;
+        if (t >= 742) return 0;
         float turn = ease((t - 335) / 20F);
         return Mth.lerp(turn, 180, 140);
     }
 
-    private float zaraYaw(float t) {
-        if (t >= 582 && t < 678) return 135;          // कोने में डरी हुई
+    private float zaraYaw(float t) {          // VIP Dhruvil
+        if (t >= 550 && t < 578) return -90;
+        if (t >= 590 && t < 678) return 180;
         if (t >= 692) return 0;
         float turn = ease((t - 255) / 20F);
         return Mth.lerp(turn, 180, 215);
@@ -539,7 +629,7 @@ public class CinematicDirector {
         p.lean = 12 * amp;
     }
 
-    private AlienRenderer.Pose zoroPose(float t) {
+    private AlienRenderer.Pose zoroPose(float t) {   // Crazy Gamer
         AlienRenderer.Pose p = new AlienRenderer.Pose();
         p.bob = Mth.sin(t * 0.1F) * 0.02F;
         p.rightArm = Mth.sin(t * 0.08F) * 4;
@@ -550,25 +640,29 @@ public class CinematicDirector {
             p.leftArm = -25 + Mth.sin(t * 0.5F) * 18;
             p.leftArmOut = 10;
         }
-        if (t > 495 && t < 520) {        // घबराहट
+        if (t > 492 && t < 507) {          // घबराहट
             p.rightArm = -165 + Mth.sin(t * 1.3F) * 15;
             p.leftArm = -165 + Mth.cos(t * 1.1F) * 15;
             p.headYaw = Mth.sin(t * 2.2F) * 25;
         }
         run(p, speed(ZORO_PATH, t), t);
-        if (t >= 550 && t < 575) {        // बटन: हाथ ऊपर... धड़ाम!
-            float up = ease((t - 550) / 8F);
-            float slam = ease((t - 558) / 3F);
-            p.rightArm = Mth.lerp(slam, Mth.lerp(up, 0, -175), -50);
-            p.rightArmOut = 8;
-            p.headPitch = 25;
+        if (t >= 506 && t < 560) {         // धड़ाम से पीछे गिरना, चक्कर, फिर उठना
+            float fall = ease((t - 506) / 6F);
+            float up = ease((t - 548) / 12F);
+            p.lean = Mth.lerp(up, -88 * fall, 0);
+            p.bob = Mth.lerp(up, 0.15F * fall, 0);
+            p.rightArm = Mth.lerp(up, -150 * fall, 0);
+            p.leftArm = Mth.lerp(up, -150 * fall, 0);
+            p.rightArmOut = 30 * fall; p.leftArmOut = 30 * fall;
+            p.headYaw = Mth.sin(t * 0.6F) * 30 * (1 - up);   // चक्कर
+            p.rightLeg = -20 * fall * (1 - up); p.leftLeg = -35 * fall * (1 - up);
         }
-        if (t >= 600 && t < 690) {        // कीपैड पर टाइपिंग
+        if (t >= 600 && t < 690) {         // कीपैड पर टाइपिंग
             p.rightArm = -55 + Mth.sin(t * 1.6F) * 10;
             p.leftArm = -55 + Mth.cos(t * 1.6F) * 10;
             p.headPitch = 30;
         }
-        if (t >= 742) {                   // जीत की चीख़: दोनों मुट्ठी ऊपर
+        if (t >= 742) {                    // जीत की चीख़
             p.rightArm = -170 + Mth.sin(t * 0.8F) * 12;
             p.leftArm = -170 + Mth.cos(t * 0.8F) * 12;
             p.rightArmOut = 15; p.leftArmOut = 15;
@@ -578,7 +672,7 @@ public class CinematicDirector {
         return p;
     }
 
-    private AlienRenderer.Pose zaraPose(float t) {
+    private AlienRenderer.Pose zaraPose(float t) {   // VIP Dhruvil
         AlienRenderer.Pose p = new AlienRenderer.Pose();
         p.bob = Mth.sin(t * 0.11F + 1) * 0.02F;
         p.rightArm = Mth.sin(t * 0.09F) * 4;
@@ -590,17 +684,17 @@ public class CinematicDirector {
             p.rightArmOut = 12;
         }
         run(p, speed(ZARA_PATH, t), t);
-        if (t > 505 && t < 582) {         // भागते हुए भी हाथ ऊपर
-            p.rightArm = -160 + Mth.cos(t * 1.4F) * 18;
-            p.leftArm = -160 + Mth.sin(t * 1.2F) * 18;
-            p.headYaw = Mth.cos(t * 2.0F) * 25;
-        }
-        if (t >= 582 && t < 678) {        // कोने में दुबककर काँपना
-            p.rightArm = -140; p.leftArm = -140;
-            p.rightArmOut = -20; p.leftArmOut = -20;
+        if (t >= 550 && t < 575) {         // बटन: हाथ ऊपर... धड़ाम!
+            float up = ease((t - 550) / 8F);
+            float slam = ease((t - 558) / 3F);
+            p.rightArm = Mth.lerp(slam, Mth.lerp(up, 0, -175), -50);
+            p.rightArmOut = 8;
             p.headPitch = 25;
-            p.lean = 18;
-            p.bob = -0.25F + Mth.sin(t * 2.5F) * 0.02F;
+        }
+        if (t >= 590 && t < 678) {         // खिड़की से पृथ्वी देखना, हाथ बाँधकर
+            p.rightArm = -40; p.leftArm = -40;
+            p.rightArmOut = -25; p.leftArmOut = -25;
+            p.headPitch = 5;
         }
         return p;
     }
@@ -658,6 +752,8 @@ public class CinematicDirector {
                 MutableComponent name = Component.translatable("planet.orbitalstrike." + ClientFx.PLANET_IDS[i])
                         .withStyle(ClientFx.PLANET_COLOR[i], ChatFormatting.BOLD);
                 big(g, font, name, w / 2, (int) (h * 0.22F), 3.0F * pop, 0xFFFFFF, al);
+                big(g, font, Component.translatable("cinematic.orbitalstrike.planet_aligned").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD),
+                        w / 2, (int) (h * 0.22F) + (int) (20 * pop), 1.6F, 0xFFFFFF, al);
             }
         }
         if (t > tl.alignedAt && t < tl.alignedAt + 55) {
@@ -665,6 +761,18 @@ public class CinematicDirector {
             big(g, font, Component.translatable("cinematic.orbitalstrike.aligned").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
                     w / 2, (int) (h * 0.22F), 3.2F, 0xFFFFFF, al);
         }
+        if (tl.mode == Timeline.LONG && t > Timeline.ORBIT_START + 5 && t < Timeline.ORBIT_START + 40) {
+            float al = Mth.clamp(Math.min((t - Timeline.ORBIT_START - 5) / 6F, (Timeline.ORBIT_START + 40 - t) / 6F), 0, 1);
+            big(g, font, Component.translatable("cinematic.orbitalstrike.lockon").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                    w / 2, (int) (h * 0.25F), 3.2F, 0xFFFFFF, al);
+        }
+        // बीम पृथ्वी से टकराते ही सफ़ेद फ़्लैश, फिर ग्रहों पर कट
+        if (tl.mode == Timeline.LONG && t > Timeline.ORBIT_START + 44 && t < tl.planetsStart + 8) {
+            float f = t < tl.planetsStart ? (t - Timeline.ORBIT_START - 44) / (tl.planetsStart - Timeline.ORBIT_START - 44F) : 1 - (t - tl.planetsStart) / 8F;
+            g.fill(0, 0, w, h, ((int) (Mth.clamp(f, 0, 1) * 255) << 24) | 0xFFFFFF);
+        }
+        // विशाल VIP के क्लोज़-अप पर स्पीड-लाइन्स
+        if (tl.vajraStart >= 0 && t > tl.impact - 70 && t < tl.impact - 30) speedLines(g, w, h, t);
         if (t > tl.impact - 30 && t < tl.impact) {
             float shake = (t - (tl.impact - 30)) / 30F;
             int ox = (int) ((mc.level.random.nextFloat() - 0.5F) * 6 * shake), oy = (int) ((mc.level.random.nextFloat() - 0.5F) * 6 * shake);
@@ -684,6 +792,21 @@ public class CinematicDirector {
         float fade = Math.max(Mth.clamp(1 - t / 15F, 0, 1), Mth.clamp((t - (tl.end - 15)) / 15F, 0, 1));
         if (fade > 0) g.fill(0, 0, w, h, ((int) (fade * 255) << 24));
         ClientEvents.renderFlash(g, pt);
+    }
+
+    private void speedLines(GuiGraphics g, int w, int h, float t) {
+        java.util.Random r = new java.util.Random((long) (t / 2));
+        int cx = w / 2, cy = h / 2;
+        for (int i = 0; i < 46; i++) {
+            float ang = r.nextFloat() * 360F;
+            float inner = Math.max(w, h) * (0.32F + r.nextFloat() * 0.15F);
+            float len = Math.max(w, h) * (0.25F + r.nextFloat() * 0.4F);
+            g.pose().pushPose();
+            g.pose().translate(cx, cy, 0);
+            g.pose().mulPose(Axis.ZP.rotationDegrees(ang));
+            g.fill((int) inner, -1, (int) (inner + len), 1 + r.nextInt(2), 0xB0FFFFFF);
+            g.pose().popPose();
+        }
     }
 
     private void dialogue(GuiGraphics g, Font font, Line l, float t, int w, int h, int bar) {

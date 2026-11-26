@@ -192,6 +192,43 @@ public class ClientFx {
         for (StrikeFx fx : ACTIVE.values()) render(fx, ps, cam, pt);
     }
 
+    /** प्रहार से पहले ज़मीन का टीला ऊपर उठता है, फिर धमाके में ब्लॉकों का बवंडर ऊपर उड़ता है */
+    private static void renderUplift(StrikeFx fx, PoseStack ps, Camera cam, float t) {
+        Timeline tl = fx.tl;
+        float start = tl.impact - 45;
+        if (t < start || t > tl.impact + 70) return;
+        MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
+        Vec3 cp = cam.getPosition();
+        float rise = Mth.clamp((t - start) / 45F, 0, 1);
+        rise = rise * rise * (3 - 2 * rise);
+        float dt = Math.max(0, t - tl.impact);
+        float fade = Mth.clamp(1 - (dt - 45) / 25F, 0, 1);
+        if (fade <= 0) return;
+        for (int k = 0; k <= 7; k++) {
+            float r = k * 2.1F;
+            int n = Math.max(1, k * 7);
+            for (int j = 0; j < n; j++) {
+                double a = j * Math.PI * 2 / n + k * 0.4;
+                float h = (float) (rise * 14 * Math.pow(1 - r / 17.0, 1.4));
+                double ang = a + dt * 0.12 * (1 + k * 0.15);
+                double rad = r + dt * (0.25 + k * 0.05);
+                double y = fx.pos.y + h - 1 + dt * (1.4 + (7 - k) * 0.25) + Math.sin(dt * 0.2 + j) * 0.5 * Math.min(1, dt / 10);
+                Vec3 p = new Vec3(fx.pos.x + Math.cos(ang) * rad, y, fx.pos.z + Math.sin(ang) * rad);
+                float sc = 1.6F * fade;
+                ps.pushPose();
+                ps.translate(p.x - cp.x, p.y - cp.y, p.z - cp.z);
+                if (dt > 0) {
+                    ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(dt * (5 + j % 7)));
+                    ps.mulPose(com.mojang.math.Axis.XP.rotationDegrees(dt * (3 + k)));
+                }
+                FxDraw.box(ps, buf, net.minecraft.world.level.block.Blocks.GRASS_BLOCK, -sc / 2, 0, -sc / 2, sc, sc, sc);
+                FxDraw.box(ps, buf, net.minecraft.world.level.block.Blocks.DIRT, -sc / 2, -sc, -sc / 2, sc, sc, sc);
+                ps.popPose();
+            }
+        }
+        buf.endBatch();
+    }
+
     private static void renderDebris(StrikeFx fx, PoseStack ps, Camera cam, float t) {
         Timeline tl = fx.tl;
         float liftStart = Math.max(tl.planetsStart, tl.impact - 90);
@@ -201,7 +238,7 @@ public class ClientFx {
         Vec3 cp = cam.getPosition();
         float lift = Mth.clamp((t - liftStart) / (tl.impact - liftStart), 0, 1);
         lift = lift * lift * (3 - 2 * lift);
-        for (int k = 0; k < 48; k++) {
+        for (int k = 0; k < 70; k++) {
             double a = r.nextDouble() * Math.PI * 2, rad = 5 + r.nextDouble() * 34;
             float size = 0.8F + r.nextFloat() * 2.0F, rise = 5 + r.nextFloat() * 22, spin = 1 + r.nextFloat() * 4;
             net.minecraft.world.level.block.Block b = DEBRIS[r.nextInt(DEBRIS.length)];
@@ -270,6 +307,19 @@ public class ClientFx {
             FxDraw.sphere(ps, cam, p, PLANET_RADIUS[i], PLANET_MAP[i], t * (1.2F + i * 0.3F), PLANET_TILT[i], L, sun, fadeOut);
         }
         FxDraw.end();
+        // हर ग्रह के चारों ओर घूमती कक्षा-रिंग (पहुँचने के बाद)
+        FxDraw.begin(true);
+        RenderSystem.enableDepthTest();
+        for (int i = 0; i < Timeline.PLANETS; i++) {
+            float since = t - tl.planetArrive(i);
+            if (since < 0) continue;
+            float grow = Mth.clamp(since / 12F, 0, 1);
+            Vec3 p = fx.planetPos(i, pt);
+            float R = PLANET_RADIUS[i] * (2.6F + 0.5F * grow);
+            FxDraw.tiltedDisc(ps, cam, p, R * grow, RING, 18 + i * 9, t * (2 + i), 0.55F * fadeOut);
+            FxDraw.tiltedDisc(ps, cam, p, R * 1.35F * grow, RING, -12 - i * 7, -t * 1.5F, 0.3F * fadeOut);
+        }
+        FxDraw.end();
         if (fx.planetVisible(5, pt)) {    // शनि की रिंग
             FxDraw.begin(false);
             RenderSystem.enableDepthTest();
@@ -284,6 +334,7 @@ public class ClientFx {
 
         // हवा में उठता मलबा (प्रहार से पहले), फिर धमाके में चारों ओर उड़ता है
         renderDebris(fx, ps, cam, t);
+        renderUplift(fx, ps, cam, t);
 
         // विशाल VIP (आसमान से उतरकर दोनों मुट्ठियाँ मारता है)
         Vec3 gp = fx.giantPos(pt);

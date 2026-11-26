@@ -210,7 +210,7 @@ public class StrikeManager {
     /** उड़ता मलबा: सतह के ब्लॉक हवा में उछलते हैं और दूर जाकर गिरते हैं */
     private static void debris(ServerLevel l, BlockPos c, int radius) {
         RandomSource r = l.random;
-        int count = Math.min(140, 30 + radius * 2);
+        int count = Math.min(220, 40 + radius * 3);
         for (int i = 0; i < count; i++) {
             double a = r.nextDouble() * Math.PI * 2, d = r.nextDouble() * radius * 0.8;
             int x = c.getX() + (int) (Math.cos(a) * d), z = c.getZ() + (int) (Math.sin(a) * d);

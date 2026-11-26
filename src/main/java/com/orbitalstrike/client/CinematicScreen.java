@@ -11,6 +11,17 @@ public class CinematicScreen extends Screen {
         super(Component.empty());
     }
 
+    /** सिनेमैटिक के दौरान माउस का तीर छिपाओ */
+    @Override
+    protected void init() {
+        GLFW.glfwSetInputMode(net.minecraft.client.Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_HIDDEN);
+    }
+
+    @Override
+    public void removed() {
+        GLFW.glfwSetInputMode(net.minecraft.client.Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+    }
+
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         CinematicDirector.renderGui(g, partialTick);

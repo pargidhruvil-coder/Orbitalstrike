@@ -313,9 +313,10 @@ public class CinematicDirector {
                 float G = ClientFx.StrikeFx.GIANT;
                 if (a < tl.impact - 70) {
                     // टारगेट के पीछे नीचे से, ऊपर विशाल VIP की ओर
+                    // दूर से पूरा विशाल VIP (सिर से पैर तक) दिखे
                     float p = ease((a - tl.vajraStart) / (float) Math.max(1, tl.impact - 70 - tl.vajraStart));
-                    pos = T.add(away.scale(26 - p * 6)).add(away.yRot((float) Math.PI / 2).scale(8)).add(0, 3 + p * 2, 0);
-                    look = g.add(0, G * (1.5 - p * 0.3), 0);
+                    pos = T.add(away.scale(G * 2.6 - p * G * 0.5)).add(away.yRot((float) Math.PI / 2).scale(G * 0.9)).add(0, 6 + p * 6, 0);
+                    look = g.add(0, G * (1.0 + 0.25 * p), 0);
                 } else {
                     // चेहरे का क्लोज़-अप (स्पीड-लाइन्स के साथ)
                     boolean first = lastShot != Phase.SHIP;

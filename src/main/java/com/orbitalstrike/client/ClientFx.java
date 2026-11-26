@@ -349,7 +349,8 @@ public class ClientFx {
         if (gp != null) {
             float ga = fx.giantAlpha(pt);
             FxDraw.begin(true);
-            FxDraw.billboard(ps, cam, gp.add(0, StrikeFx.GIANT * 1.1, 0), StrikeFx.GIANT * 1.3F, GLOW, 0.6F, 0.3F, 1F, 0.35F * ga, 0);
+            FxDraw.billboard(ps, cam, gp.add(0, StrikeFx.GIANT * 1.1, 0), StrikeFx.GIANT * 2.2F, GLOW, 0.6F, 0.3F, 1F, 0.7F * ga, 0);
+            FxDraw.billboard(ps, cam, gp.add(0, StrikeFx.GIANT * 1.7, 0), StrikeFx.GIANT * 1.1F, GLOW, 0.9F, 0.7F, 1F, 0.5F * ga, 0);
             FxDraw.end();
             MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
             ps.pushPose();

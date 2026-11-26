@@ -839,6 +839,9 @@ public class CinematicDirector {
         } else {
             ResourceLocation skin = l.speaker.equals("zara") ? AlienRenderer.ZARA : AlienRenderer.ZORO;
             g.blit(skin, px, py, ps, ps, 8, 8, 8, 8, 64, 64);
+            RenderSystem.enableBlend();
+            g.blit(skin, px, py, ps, ps, 40, 8, 8, 8, 64, 64);     // ऊपरी परत (हैट) भी, जैसे गेम में दिखता है
+            RenderSystem.disableBlend();
         }
         Component name = Component.translatable("speaker.orbitalstrike." + l.speaker).withStyle(l.color, ChatFormatting.BOLD);
         g.drawString(font, name, px + ps + 8, py, 0xFFFFFF);

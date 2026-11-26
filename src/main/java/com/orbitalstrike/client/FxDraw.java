@@ -91,7 +91,7 @@ public final class FxDraw {
                 for (int[] k : corners) {
                     double th = Math.PI * k[0] / LAT, ph = 2 * Math.PI * k[1] / LON;
                     float nx = (float) (Math.sin(th) * Math.cos(ph)), ny = (float) Math.cos(th), nz = (float) (Math.sin(th) * Math.sin(ph));
-                    float sh = emissive ? 1F : 0.1F + 0.95F * (float) Math.max(0, nx * L.x + ny * L.y + nz * L.z);
+                    float sh = emissive ? 1F : 0.42F + 0.7F * (float) Math.max(0, nx * L.x + ny * L.y + nz * L.z);
                     sh = Math.min(1F, sh);
                     bb.vertex(m, nx * r, ny * r, nz * r).uv(k[1] / (float) LON, k[0] / (float) LAT).color(sh, sh, sh, alpha).endVertex();
                 }

@@ -92,31 +92,54 @@ public class ClientFx {
 
         public float topY() { return PLANET_Y[Timeline.PLANETS - 1]; }
 
-        /** एलियन शिप की जगह (null = नहीं दिख रहा) */
-        public Vec3 shipPos(float partial) {
+        public static final float GIANT = 36F;
+
+        /** विशाल VIP कहाँ खड़ा है (पैर), null = नहीं दिख रहा */
+        public Vec3 giantPos(float partial) {
             if (tl.vajraStart < 0) return null;
             float t = time(partial);
-            if (t < tl.vajraStart || t > tl.impact + 70) return null;
-            Vec3 cannonOff = new Vec3(0, 0, ShipModel.CANNON_Z * SHIP_SCALE).yRot((float) Math.toRadians(SHIP_YAW));
-            Vec3 hover = pos.add(-cannonOff.x, topY() - ShipModel.CANNON_Y * SHIP_SCALE + 18, -cannonOff.z);
-            if (t > tl.impact + 20) {           // प्रहार के बाद शिप ऊपर निकल जाता है
-                float p = (t - tl.impact - 20) / 50F;
-                return hover.add(p * p * 120, p * p * 260, 0);
-            }
-            float p = Mth.clamp((t - tl.vajraStart) / 70F, 0, 1);
-            float e = 1 - (1 - p) * (1 - p) * (1 - p);
-            Vec3 from = pos.add(-420, 260, 180);
-            return from.lerp(hover, e).add(0, Math.sin(t * 0.08) * 0.6, 0);
+            if (t < tl.vajraStart || t > tl.impact + 75) return null;
+            double ang = (id * 2.3) % (Math.PI * 2);
+            Vec3 feet = pos.add(Math.cos(ang) * 44, -1, Math.sin(ang) * 44);
+            float p = Mth.clamp((t - tl.vajraStart) / 60F, 0, 1);
+            p = 1 - (1 - p) * (1 - p) * (1 - p);
+            return feet.add(0, (1 - p) * 160, 0);
         }
 
-        /** तोप की चमक 0..1 */
-        public float shipGlow(float partial) {
+        public float giantYaw() {
+            double ang = (id * 2.3) % (Math.PI * 2);
+            double dx = -Math.cos(ang), dz = -Math.sin(ang);       // टारगेट की ओर
+            return (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90F;
+        }
+
+        public float giantAlpha(float partial) {
             float t = time(partial);
-            return Mth.clamp((t - (tl.impact - 120)) / 120F, 0, 1);
+            return Mth.clamp(Math.min((t - tl.vajraStart) / 25F, (tl.impact + 75 - t) / 30F), 0, 1);
         }
 
-        public float shipYaw(float partial) {
-            return SHIP_YAW;
+        /** हाथ ऊपर उठाना, फिर दोनों मुट्ठियाँ नीचे टारगेट पर */
+        public AlienRenderer.Pose giantPose(float partial) {
+            float t = time(partial);
+            AlienRenderer.Pose p = new AlienRenderer.Pose();
+            float raise = Mth.clamp((t - (tl.vajraStart + 55)) / 40F, 0, 1);
+            raise = raise * raise * (3 - 2 * raise);
+            float slam = Mth.clamp((t - (tl.impact - 12)) / 12F, 0, 1);
+            slam = slam * slam;
+            float arm = Mth.lerp(slam, Mth.lerp(raise, -10, -178), -55);
+            p.rightArm = arm + Mth.sin(t * 0.5F) * 3 * (1 - slam);
+            p.leftArm = arm - Mth.sin(t * 0.5F) * 3 * (1 - slam);
+            p.rightArmOut = 6 + 10 * raise * (1 - slam);
+            p.leftArmOut = 6 + 10 * raise * (1 - slam);
+            p.lean = Mth.lerp(slam, -8 * raise, 38);
+            p.headPitch = Mth.lerp(slam, -15 * raise, 35);
+            if (t > tl.impact) {
+                float rec = Mth.clamp((t - tl.impact - 15) / 40F, 0, 1);
+                p.lean = Mth.lerp(rec, 38, 5);
+                p.rightArm = Mth.lerp(rec, -55, -5);
+                p.leftArm = Mth.lerp(rec, -55, -5);
+                p.headPitch = Mth.lerp(rec, 35, -10);
+            }
+            return p;
         }
     }
 
@@ -242,6 +265,7 @@ public class ClientFx {
             Vec3 p = fx.planetPos(i, pt);
             Vec3 L = sunP.subtract(p);
             if (L.lengthSqr() < 1) L = new Vec3(0.4, 1, 0.3);
+            L = L.normalize().add(cam.getPosition().subtract(p).normalize().scale(0.9));   // कैमरे की तरफ़ से भी रोशनी
             boolean sun = i == Timeline.PLANETS - 1;
             FxDraw.sphere(ps, cam, p, PLANET_RADIUS[i], PLANET_MAP[i], t * (1.2F + i * 0.3F), PLANET_TILT[i], L, sun, fadeOut);
         }
@@ -261,19 +285,20 @@ public class ClientFx {
         // हवा में उठता मलबा (प्रहार से पहले), फिर धमाके में चारों ओर उड़ता है
         renderDebris(fx, ps, cam, t);
 
-        // एलियन शिप
-        Vec3 sp = fx.shipPos(pt);
-        if (sp != null) {
-            float glow = fx.shipGlow(pt);
+        // विशाल VIP (आसमान से उतरकर दोनों मुट्ठियाँ मारता है)
+        Vec3 gp = fx.giantPos(pt);
+        if (gp != null) {
+            float ga = fx.giantAlpha(pt);
+            FxDraw.begin(true);
+            FxDraw.billboard(ps, cam, gp.add(0, StrikeFx.GIANT * 1.1, 0), StrikeFx.GIANT * 1.3F, GLOW, 0.6F, 0.3F, 1F, 0.35F * ga, 0);
+            FxDraw.end();
             MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
             ps.pushPose();
             Vec3 cp = cam.getPosition();
-            ps.translate(sp.x - cp.x, sp.y - cp.y, sp.z - cp.z);
-            ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(fx.shipYaw(pt)));
-            ShipModel.render(ps, buf, SHIP_SCALE, 0, glow, ((int) (t / 8)) % 2 == 0);
+            ps.translate(-cp.x, -cp.y, -cp.z);
+            AlienRenderer.render(ps, buf, AlienRenderer.ZARA, gp.x, gp.y, gp.z, fx.giantYaw(), fx.giantPose(pt), StrikeFx.GIANT, ga);
             ps.popPose();
             buf.endBatch();
-            ShipModel.renderGlow(ps, cam, sp, fx.shipYaw(pt), SHIP_SCALE, t, glow);
         }
 
         // ऑर्बिटल बीम
@@ -282,8 +307,7 @@ public class ClientFx {
         if (beamIn > 0 && beamOut > 0) {
             float a = beamIn * beamOut;
             float pulse = 1 + 0.15F * Mth.sin(t * 1.3F);
-            Vec3 shipNow = fx.shipPos(pt);
-            float h = shipNow != null ? (float) (ShipModel.cannonWorld(shipNow, SHIP_YAW, SHIP_SCALE).y - c.y) : (float) (topY - c.y) + 10;
+            float h = (float) (topY - c.y) + 10;
             float rr = t < tl.impact ? 0.4F + beamIn * 1.2F : 6F * pulse;
             FxDraw.begin(true);
             FxDraw.cylinder(ps, cam, c, h, rr, BEAM, 1F, 1F, 1F, a, -t * 0.08F);
@@ -295,8 +319,7 @@ public class ClientFx {
 
         // बीम के चारों ओर घूमते छल्ले
         if (beamIn > 0 && beamOut > 0) {
-            Vec3 shipNow2 = fx.shipPos(pt);
-            float h2 = shipNow2 != null ? (float) (ShipModel.cannonWorld(shipNow2, SHIP_YAW, SHIP_SCALE).y - c.y) : (float) (topY - c.y);
+            float h2 = (float) (topY - c.y);
             float rr = t < tl.impact ? 2 + beamIn * 3 : 9;
             FxDraw.begin(true);
             for (int k = 0; k < 7; k++) {

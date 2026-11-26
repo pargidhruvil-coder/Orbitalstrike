@@ -42,6 +42,11 @@ public final class AlienRenderer {
 
     public static void render(PoseStack ps, MultiBufferSource buf, ResourceLocation tex, double x, double y, double z,
                               float bodyYaw, Pose p) {
+        render(ps, buf, tex, x, y, z, bodyYaw, p, 1.05F, 1F);
+    }
+
+    public static void render(PoseStack ps, MultiBufferSource buf, ResourceLocation tex, double x, double y, double z,
+                              float bodyYaw, Pose p, float scale, float alpha) {
         PlayerModel<LivingEntity> m = model();
         m.young = false;
         m.crouching = false;
@@ -62,13 +67,14 @@ public final class AlienRenderer {
         m.leftPants.copyFrom(m.leftLeg);
 
         ps.pushPose();
-        ps.translate(x, y + p.bob, z);
+        ps.translate(x, y + p.bob * scale, z);
         ps.mulPose(Axis.YP.rotationDegrees(180.0F - bodyYaw));
         if (p.lean != 0) ps.mulPose(Axis.XP.rotationDegrees(-p.lean));
         ps.scale(-1.0F, -1.0F, 1.0F);
-        ps.scale(1.05F, 1.05F, 1.05F);
+        ps.scale(scale, scale, scale);
         ps.translate(0.0F, -1.501F, 0.0F);
-        m.renderToBuffer(ps, buf.getBuffer(RenderType.entityCutoutNoCull(tex)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
+        RenderType rt = alpha < 0.99F ? RenderType.entityTranslucent(tex) : RenderType.entityCutoutNoCull(tex);
+        m.renderToBuffer(ps, buf.getBuffer(rt), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1, 1, 1, alpha);
         ps.popPose();
     }
 }

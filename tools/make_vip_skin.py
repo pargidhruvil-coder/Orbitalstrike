@@ -1,4 +1,4 @@
-"""Rebuild Zoro's 64x64 skin from the user's reference (black body, purple eyes, white VIP, white wrist cuffs)."""
+"""Rebuild the VIP skin (now Zara) from the user's reference (black body, purple eyes, white VIP, white wrist cuffs)."""
 import sys, numpy as np
 from PIL import Image
 rng = np.random.default_rng(21)
@@ -19,8 +19,9 @@ for part, b in BOX.items():
                 px[x + i, y + h - 2] = (235, 235, 238, 255); px[x + i, y + h - 1] = (215, 218, 222, 255)
 W = (245, 245, 245, 255)
 # eyes (head front = 8..15, 8..15)
-px[9, 12] = (110, 40, 220, 255); px[10, 12] = (175, 110, 255, 255); px[11, 12] = W
-px[12, 12] = W; px[13, 12] = (175, 110, 255, 255); px[14, 12] = (110, 40, 220, 255)
+# normal game-style eyes (same style as the Crazy skin): white outside, dark pupil inside, 2 rows
+px[9, 12] = (153, 145, 147, 255); px[10, 12] = (32, 26, 13, 255); px[9, 13] = (255, 255, 255, 255); px[10, 13] = (66, 48, 9, 255)
+px[14, 12] = (153, 145, 147, 255); px[13, 12] = (32, 26, 13, 255); px[14, 13] = (255, 255, 255, 255); px[13, 13] = (66, 48, 9, 255)
 # VIP on chest (body front = 20..27, 20..31)
 bx, by = 20, 23
 for (dx, dy) in [(0, 0), (2, 0), (0, 1), (2, 1), (1, 2), (4, 0), (4, 1), (4, 2), (6, 0), (7, 0), (6, 1), (7, 1), (6, 2)]:

@@ -132,8 +132,8 @@ public class CinematicDirector {
             lines.add(new Line(605, 60, "zoro", zo, "z6"));
             lines.add(new Line(692, 45, "zara", za, "z7"));
             lines.add(new Line(742, 55, "zoro", zo, "z8"));
-            lines.add(new Line(tl.vajraStart + 20, 70, "zoro", zo, "z9"));
-            lines.add(new Line(tl.vajraStart + 100, 60, "zara", za, "z10"));
+            lines.add(new Line(tl.vajraStart + 20, 70, "zara", za, "z9"));
+            lines.add(new Line(tl.impact - 45, 45, "zara", za, "z10"));
 
             Vec3 zoroHead = ZORO_POS.add(0, 1.75, 0), zaraHead = ZARA_POS.add(0, 1.75, 0);
             shots.add(new Shot(250, v(0, 1.8, 3.6), v(0, 1.7, 2.5), v(0, 1.3, -3), v(0, 1.4, -3)));
@@ -146,8 +146,8 @@ public class CinematicDirector {
             shots.add(new Shot(690, v(-1.4, 1.7, 1.7), v(-1.4, 1.7, 1.4), v(-1.4, 1.75, -0.4), v(-1.4, 1.75, -0.4)));
             shots.add(new Shot(735, v(0, 0.9, 1.6), v(0, 0.95, 1.3), v(0, 1.9, -0.8), v(0, 1.95, -0.8)));
         } else if (tl.mode == Timeline.MEDIUM) {
-            lines.add(new Line(tl.vajraStart + 5, 55, "zoro", zo, "z9"));
-            lines.add(new Line(tl.vajraStart + 65, 50, "zara", za, "z10"));
+            lines.add(new Line(tl.vajraStart + 5, 55, "zara", za, "z9"));
+            lines.add(new Line(tl.impact - 45, 45, "zara", za, "z10"));
         }
         lines.add(new Line(tl.impact + 72, Math.max(40, tl.end - tl.impact - 75), "player", ChatFormatting.WHITE, "l" + ending));
     }
@@ -244,7 +244,7 @@ public class CinematicDirector {
 
     // दरवाज़ा शिप की दाईं (+X) तरफ़: लोकल (5.6, -1.8, 5.7) x SHIP_SCALE
     private static final Vec3[] APPROACH_PATH = {
-            SHIP.add(150, 28, 230), SHIP.add(115, 12, 120), SHIP.add(62, 0, 42), SHIP.add(34, -5.4, 17.1), SHIP.add(19, -5.4, 17.1), SHIP.add(9, -5.4, 17.1)};
+            SHIP.add(150, 28, 230), SHIP.add(115, 12, 120), SHIP.add(66, 0, 44), SHIP.add(44, -5.4, 20), SHIP.add(34, -5.4, 17.1), SHIP.add(28, -5.4, 17.1)};
 
     private void camera(Phase ph, int a, boolean cut) {
         Vec3 T = fx.pos;
@@ -266,7 +266,7 @@ public class CinematicDirector {
                     sc = Vec3.ZERO.lerp(APPROACH_PATH[0], 0.9).lerp(sc, (a - Timeline.APPROACH_START) / 8.0);
                 }
                 sceneSet(sc, cut);
-                Vec3 lk = u < 0.72F ? SHIP.add(0, 4, 12) : sc.add(-10, 0, 0);
+                Vec3 lk = u < 0.6F ? SHIP.add(0, 4, 12) : SHIP.add(16.8, -5.4, 17.1);   // आखिर में खुलते दरवाज़े पर
                 rotTo(eye, eye.add(lk.subtract(sc)), cut);
                 return;
             }
@@ -293,10 +293,13 @@ public class CinematicDirector {
                 look = T.add(0, 35 + ease(p) * 70 + after * 15, 0);
             }
             case SHIP -> {
-                Vec3 dir = new Vec3(T.x - eye.x, 0, T.z - eye.z).normalize();
-                pos = eye.add(dir.scale(-3.2)).add(dir.yRot((float) Math.PI / 2).scale(1.1)).add(0, 0.6, 0);
-                Vec3 sp = fx.shipPos(0);
-                look = sp != null ? sp : T.add(0, 120, 0);
+                // टारगेट के पीछे नीचे से, ऊपर विशाल VIP की ओर
+                Vec3 gp = fx.giantPos(0);
+                Vec3 g = gp != null ? gp : T.add(40, 0, 0);
+                Vec3 away = new Vec3(T.x - g.x, 0, T.z - g.z).normalize();
+                float p = ease((a - tl.vajraStart) / (float) Math.max(1, tl.impact - 30 - tl.vajraStart));
+                pos = T.add(away.scale(26 - p * 6)).add(away.yRot((float) Math.PI / 2).scale(8)).add(0, 3 + p * 2, 0);
+                look = g.add(0, ClientFx.StrikeFx.GIANT * (1.5 - p * 0.3), 0);
             }
             case IMPACT -> {
                 double ang = baseAng + Math.toRadians((a - (tl.impact - 30)) * 0.25);

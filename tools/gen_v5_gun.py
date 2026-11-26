@@ -106,7 +106,7 @@ def model(hot):
                     "faces": {fc: {"uv": FULL, "texture": "#" + tx} for fc in ("north", "south", "east", "west", "up", "down")}})
     m = {"textures": tex, "elements": els, "gui_light": "front",
          "display": {
-             "thirdperson_righthand": {"rotation": [-90, 0, -15], "translation": [1.5, 1.0, -3.5], "scale": [0.62, 0.62, 0.62]},
+             "thirdperson_righthand": {"rotation": [0, -90, -90], "translation": [0, 3.0, 0.5], "scale": [0.62, 0.62, 0.62]},
              "firstperson_righthand": {"rotation": [0, -90, 0], "translation": [1.5, 2.6, 0.5], "scale": [0.5, 0.5, 0.5]},
              "gui": {"rotation": [15, -25, 0], "translation": [0, 0, 0], "scale": [0.55, 0.55, 0.55]},
              "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.4, 0.4, 0.4]},

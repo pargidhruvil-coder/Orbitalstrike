@@ -204,6 +204,12 @@ public class ClientEvents {
         }
     }
 
+    /** सिनेमैटिक के दौरान हाथ और गन नहीं दिखनी चाहिए */
+    @SubscribeEvent
+    public static void onRenderHand(net.minecraftforge.client.event.RenderHandEvent event) {
+        if (CinematicDirector.isActive()) event.setCanceled(true);
+    }
+
     @SubscribeEvent
     public static void onOverlay(RenderGuiOverlayEvent.Pre event) {
         if (CinematicDirector.isActive()) {

@@ -52,7 +52,7 @@ public class CinematicDirector {
     // अंदर के सीन में एलियन की जगह
     private static final Vec3 ZORO_POS = new Vec3(1.4, 0, -1.6);
     private static final Vec3 ZARA_POS = new Vec3(-1.4, 0, -1.6);
-    private static final Vec3 BUTTON = new Vec3(1.4, 0.95, -2.55);
+    private static final Vec3 BUTTON = new Vec3(3.3, 1.05, 1.0);   // अलग खड़े स्टैंड पर बड़ा लाल बटन
 
     private final ClientFx.StrikeFx fx;
     private final Timeline tl;
@@ -128,8 +128,8 @@ public class CinematicDirector {
             lines.add(new Line(345, 70, "zoro", zo, "z2"));
             lines.add(new Line(425, 62, "zara", za, "z3"));
             lines.add(new Line(495, 70, "zoro", zo, "z4"));
-            lines.add(new Line(572, 30, "zoro", zo, "z5"));
-            lines.add(new Line(605, 60, "zara", za, "z6"));
+            lines.add(new Line(538, 32, "zoro", zo, "z5"));
+            lines.add(new Line(605, 60, "zoro", zo, "z6"));
             lines.add(new Line(692, 45, "zara", za, "z7"));
             lines.add(new Line(742, 55, "zoro", zo, "z8"));
             lines.add(new Line(tl.vajraStart + 20, 70, "zoro", zo, "z9"));
@@ -139,11 +139,12 @@ public class CinematicDirector {
             shots.add(new Shot(250, v(0, 1.8, 3.6), v(0, 1.7, 2.5), v(0, 1.3, -3), v(0, 1.4, -3)));
             shots.add(new Shot(340, v(2.7, 1.75, 0.4), v(2.4, 1.75, 0.1), zoroHead, zoroHead));
             shots.add(new Shot(420, v(-2.7, 1.75, 0.4), v(-2.4, 1.75, 0.1), zaraHead, zaraHead));
-            shots.add(new Shot(490, v(0, 2.6, 3.4), v(0.6, 2.4, 2.9), v(0, 1.4, -2), v(0, 1.5, -2)));
-            shots.add(new Shot(570, v(2.2, 1.15, 0.5), v(2.1, 1.15, 0.3), zoroHead.add(0, 0.1, 0), zoroHead));
+            shots.add(new Shot(490, v(0, 2.6, 3.4), v(0.6, 2.4, 2.9), v(0, 1.2, -1), v(0.5, 1.2, 0)));
+            shots.add(new Shot(540, v(1.6, 2.2, 3.5), v(1.9, 2.0, 3.2), BUTTON.add(-0.3, 0.3, -0.3), BUTTON.add(0, 0.2, 0)));
+            shots.add(new Shot(575, v(-2.6, 2.5, 3.3), v(-2.2, 2.4, 3.0), v(1.5, 1.0, -0.5), v(-1.4, 1.0, -2.0)));
             shots.add(new Shot(600, v(-0.9, 2.6, -0.5), v(-1.2, 2.4, -1.0), v(-1.4, 0.9, -2.6), v(-1.4, 0.9, -2.6)));
-            shots.add(new Shot(690, v(-2.5, 1.7, 0.2), v(-2.3, 1.7, 0.0), zaraHead, zaraHead));
-            shots.add(new Shot(740, v(2.9, 1.3, -1.1), v(2.6, 1.2, -1.6), BUTTON, BUTTON.add(0, 0.2, 0)));
+            shots.add(new Shot(690, v(-1.4, 1.7, 1.7), v(-1.4, 1.7, 1.4), v(-1.4, 1.75, -0.4), v(-1.4, 1.75, -0.4)));
+            shots.add(new Shot(735, v(0, 0.9, 1.6), v(0, 0.95, 1.3), v(0, 1.9, -0.8), v(0, 1.95, -0.8)));
         } else if (tl.mode == Timeline.MEDIUM) {
             lines.add(new Line(tl.vajraStart + 5, 55, "zoro", zo, "z9"));
             lines.add(new Line(tl.vajraStart + 65, 50, "zara", za, "z10"));
@@ -206,7 +207,7 @@ public class CinematicDirector {
             if (t >= 500 && t < 690 && (t - 500) % 48 == 0) play(ModSounds.ALARM.get(), 1F, 0.7F);
             if (t == 610 || t == 625 || t == 640 || t == 655) play(ModSounds.KEYPAD.get(), 1F, 1F);
             if (t == 680) play(ModSounds.ACCESS.get(), 1F, 1F);
-            if (t == 770) {
+            if (t == 560) {
                 play(ModSounds.BUTTON.get(), 1F, 1F);
                 ClientEvents.addShake(1.6F);
             }
@@ -460,13 +461,16 @@ public class CinematicDirector {
                 box(ps, buf, lit ? Blocks.LIME_CONCRETE : Blocks.QUARTZ_BLOCK, -1.75 + col * 0.13, 0.94, -2.75 + r * 0.11, 0.1, 0.04, 0.08);
             }
         // ज़ोरो का बड़ा लाल बटन
-        float press = t >= 770 ? 1 : 0;
-        box(ps, buf, Blocks.IRON_BLOCK, BUTTON.x - 0.22, 0.93, BUTTON.z - 0.22, 0.44, 0.08, 0.44);
-        box(ps, buf, Blocks.REDSTONE_BLOCK, BUTTON.x - 0.15, 1.0 - press * 0.06, BUTTON.z - 0.15, 0.3, 0.12, 0.3);
+        float press = t >= 560 ? 1 : 0;
+        box(ps, buf, Blocks.POLISHED_DEEPSLATE, BUTTON.x - 0.4, 0, BUTTON.z - 0.4, 0.8, 0.95, 0.8);
+        box(ps, buf, Blocks.YELLOW_CONCRETE, BUTTON.x - 0.42, 0.85, BUTTON.z - 0.42, 0.84, 0.06, 0.84);
+        box(ps, buf, Blocks.IRON_BLOCK, BUTTON.x - 0.25, 0.95, BUTTON.z - 0.25, 0.5, 0.08, 0.5);
+        box(ps, buf, Blocks.REDSTONE_BLOCK, BUTTON.x - 0.17, 1.03 - press * 0.07, BUTTON.z - 0.17, 0.34, 0.14, 0.34);
 
         // एलियन
-        AlienRenderer.render(ps, buf, AlienRenderer.ZORO, ZORO_POS.x, ZORO_POS.y, ZORO_POS.z, zoroYaw(t), zoroPose(t));
-        AlienRenderer.render(ps, buf, AlienRenderer.ZARA, ZARA_POS.x, ZARA_POS.y, ZARA_POS.z, zaraYaw(t), zaraPose(t));
+        Vec3 zp = path(ZORO_PATH, t), zap = path(ZARA_PATH, t);
+        AlienRenderer.render(ps, buf, AlienRenderer.ZORO, zp.x, 0, zp.z, alienYaw(ZORO_PATH, t, zoroYaw(t)), zoroPose(t));
+        AlienRenderer.render(ps, buf, AlienRenderer.ZARA, zap.x, 0, zap.z, alienYaw(ZARA_PATH, t, zaraYaw(t)), zaraPose(t));
     }
 
     private boolean speaking(String who, float t) {
@@ -474,16 +478,62 @@ public class CinematicDirector {
         return false;
     }
 
+    // ---------------------------------------------------------------- एलियन की दौड़ (रास्ते: {समय, x, z})
+    private static final float[][] ZORO_PATH = {
+            {0, 1.4F, -1.6F}, {520, 1.4F, -1.6F}, {534, 2.4F, -0.3F}, {550, 2.75F, 0.6F},       // भागकर बटन तक
+            {574, 2.75F, 0.6F}, {585, 1.6F, -0.6F}, {598, -1.4F, -1.9F},                         // भागकर कीपैड तक
+            {730, -1.4F, -1.9F}, {742, 0, -0.8F}, {2000, 0, -0.8F}};                              // बीच में आकर चिल्लाना
+    private static final float[][] ZARA_PATH = {
+            {0, -1.4F, -1.6F}, {505, -1.4F, -1.6F}, {518, -2.6F, 0.4F}, {534, -1.0F, 2.7F},     // घबराकर चक्कर
+            {550, 1.2F, 2.5F}, {566, 0.2F, 1.0F}, {582, -2.7F, 2.4F},                            // कोने में छुपना
+            {678, -2.7F, 2.4F}, {692, -1.4F, -0.4F}, {2000, -1.4F, -0.4F}};
+
+    private static Vec3 path(float[][] p, float t) {
+        for (int i = 0; i < p.length - 1; i++) {
+            if (t <= p[i + 1][0]) {
+                float f = Mth.clamp((t - p[i][0]) / Math.max(1, p[i + 1][0] - p[i][0]), 0, 1);
+                return new Vec3(Mth.lerp(f, p[i][1], p[i + 1][1]), 0, Mth.lerp(f, p[i][2], p[i + 1][2]));
+            }
+        }
+        float[] l = p[p.length - 1];
+        return new Vec3(l[1], 0, l[2]);
+    }
+
+    /** दौड़ते समय चेहरा चलने की दिशा में, रुके हों तो fallback */
+    private static float alienYaw(float[][] p, float t, float fallback) {
+        Vec3 a = path(p, t - 1), b = path(p, t + 1);
+        double dx = b.x - a.x, dz = b.z - a.z;
+        if (dx * dx + dz * dz < 0.0004) return fallback;
+        return (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90F;
+    }
+
+    private static float speed(float[][] p, float t) {
+        return (float) path(p, t + 1).distanceTo(path(p, t - 1)) * 0.5F;
+    }
+
     private float zoroYaw(float t) {
-        if (t > 735) return 180;
+        if (t >= 550 && t < 578) return -90;          // बटन की तरफ़ (+X)
+        if (t >= 598 && t < 730) return 180;          // कीपैड की तरफ़
+        if (t >= 742) return 0;                        // कैमरे की तरफ़
         float turn = ease((t - 335) / 20F);
         return Mth.lerp(turn, 180, 140);
     }
 
     private float zaraYaw(float t) {
-        if (t > 595 && t < 690) return 180;
+        if (t >= 582 && t < 678) return 135;          // कोने में डरी हुई
+        if (t >= 692) return 0;
         float turn = ease((t - 255) / 20F);
         return Mth.lerp(turn, 180, 215);
+    }
+
+    private static void run(AlienRenderer.Pose p, float speed, float t) {
+        if (speed < 0.02F) return;
+        float amp = Math.min(1F, speed * 8F);
+        float sw = Mth.sin(t * 1.1F) * 55 * amp;
+        p.rightLeg = sw; p.leftLeg = -sw;
+        p.rightArm = -sw * 0.9F; p.leftArm = sw * 0.9F;
+        p.bob = Math.abs(Mth.sin(t * 1.1F)) * 0.08F * amp;
+        p.lean = 12 * amp;
     }
 
     private AlienRenderer.Pose zoroPose(float t) {
@@ -497,17 +547,30 @@ public class CinematicDirector {
             p.leftArm = -25 + Mth.sin(t * 0.5F) * 18;
             p.leftArmOut = 10;
         }
-        if (t > 500 && t < 600) {        // घबराहट: हाथ ऊपर
+        if (t > 495 && t < 520) {        // घबराहट
             p.rightArm = -165 + Mth.sin(t * 1.3F) * 15;
             p.leftArm = -165 + Mth.cos(t * 1.1F) * 15;
             p.headYaw = Mth.sin(t * 2.2F) * 25;
         }
-        if (t > 740) {                    // लाल बटन: हाथ उठाओ... और ज़ोर से मारो
-            float up = ease((t - 740) / 22F);
-            float slam = ease((t - 766) / 4F);
-            p.rightArm = Mth.lerp(slam, Mth.lerp(up, 0, -175), -45);
+        run(p, speed(ZORO_PATH, t), t);
+        if (t >= 550 && t < 575) {        // बटन: हाथ ऊपर... धड़ाम!
+            float up = ease((t - 550) / 8F);
+            float slam = ease((t - 558) / 3F);
+            p.rightArm = Mth.lerp(slam, Mth.lerp(up, 0, -175), -50);
             p.rightArmOut = 8;
-            p.headPitch = 20;
+            p.headPitch = 25;
+        }
+        if (t >= 600 && t < 690) {        // कीपैड पर टाइपिंग
+            p.rightArm = -55 + Mth.sin(t * 1.6F) * 10;
+            p.leftArm = -55 + Mth.cos(t * 1.6F) * 10;
+            p.headPitch = 30;
+        }
+        if (t >= 742) {                   // जीत की चीख़: दोनों मुट्ठी ऊपर
+            p.rightArm = -170 + Mth.sin(t * 0.8F) * 12;
+            p.leftArm = -170 + Mth.cos(t * 0.8F) * 12;
+            p.rightArmOut = 15; p.leftArmOut = 15;
+            p.headPitch = -20;
+            p.bob = Math.abs(Mth.sin(t * 0.4F)) * 0.15F;
         }
         return p;
     }
@@ -523,15 +586,18 @@ public class CinematicDirector {
             p.rightArm = -30 + Mth.sin(t * 0.6F) * 20;
             p.rightArmOut = 12;
         }
-        if (t > 500 && t < 600) {
+        run(p, speed(ZARA_PATH, t), t);
+        if (t > 505 && t < 582) {         // भागते हुए भी हाथ ऊपर
             p.rightArm = -160 + Mth.cos(t * 1.4F) * 18;
             p.leftArm = -160 + Mth.sin(t * 1.2F) * 18;
             p.headYaw = Mth.cos(t * 2.0F) * 25;
         }
-        if (t > 600 && t < 690) {        // कीपैड पर टाइपिंग
-            p.rightArm = -55 + Mth.sin(t * 1.6F) * 10;
-            p.leftArm = -55 + Mth.cos(t * 1.6F) * 10;
-            p.headPitch = 30;
+        if (t >= 582 && t < 678) {        // कोने में दुबककर काँपना
+            p.rightArm = -140; p.leftArm = -140;
+            p.rightArmOut = -20; p.leftArmOut = -20;
+            p.headPitch = 25;
+            p.lean = 18;
+            p.bob = -0.25F + Mth.sin(t * 2.5F) * 0.02F;
         }
         return p;
     }
@@ -619,7 +685,8 @@ public class CinematicDirector {
 
     private void dialogue(GuiGraphics g, Font font, Line l, float t, int w, int h, int bar) {
         Minecraft mc = Minecraft.getInstance();
-        int boxH = 52, x0 = 24, x1 = w - 24, y1 = h - bar - 6, y0 = y1 - boxH;
+        int boxW = Math.min(w - 40, 380);
+        int boxH = 52, x0 = (w - boxW) / 2, x1 = x0 + boxW, y1 = h - bar - 6, y0 = y1 - boxH;
         g.fill(x0, y0, x1, y1, 0xC0000000);
         g.fill(x0, y0, x1, y0 + 1, l.speaker.equals("zara") ? 0xFFC060FF : l.speaker.equals("zoro") ? 0xFF80FF60 : 0xFFFFFFFF);
         int px = x0 + 6, py = y0 + 6, ps = 40;

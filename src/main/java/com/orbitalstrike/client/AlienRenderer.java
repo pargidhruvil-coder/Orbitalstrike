@@ -36,6 +36,8 @@ public final class AlienRenderer {
         public float rightArm, leftArm;           // आगे-पीछे (डिग्री, ऋणात्मक = ऊपर)
         public float rightArmOut, leftArmOut;     // बाहर की ओर (डिग्री)
         public float bob;                         // ऊपर-नीचे
+        public float rightLeg, leftLeg;           // दौड़ते पैर (डिग्री)
+        public float lean;                        // आगे झुकना (डिग्री)
     }
 
     public static void render(PoseStack ps, MultiBufferSource buf, ResourceLocation tex, double x, double y, double z,
@@ -50,8 +52,8 @@ public final class AlienRenderer {
         m.body.xRot = 0; m.body.yRot = 0; m.body.zRot = 0;
         m.rightArm.xRot = p.rightArm * Mth.DEG_TO_RAD; m.rightArm.yRot = 0; m.rightArm.zRot = p.rightArmOut * Mth.DEG_TO_RAD;
         m.leftArm.xRot = p.leftArm * Mth.DEG_TO_RAD; m.leftArm.yRot = 0; m.leftArm.zRot = -p.leftArmOut * Mth.DEG_TO_RAD;
-        m.rightLeg.xRot = 0; m.rightLeg.yRot = 0; m.rightLeg.zRot = 0;
-        m.leftLeg.xRot = 0; m.leftLeg.yRot = 0; m.leftLeg.zRot = 0;
+        m.rightLeg.xRot = p.rightLeg * Mth.DEG_TO_RAD; m.rightLeg.yRot = 0; m.rightLeg.zRot = 0;
+        m.leftLeg.xRot = p.leftLeg * Mth.DEG_TO_RAD; m.leftLeg.yRot = 0; m.leftLeg.zRot = 0;
         m.hat.copyFrom(m.head);
         m.jacket.copyFrom(m.body);
         m.rightSleeve.copyFrom(m.rightArm);
@@ -62,6 +64,7 @@ public final class AlienRenderer {
         ps.pushPose();
         ps.translate(x, y + p.bob, z);
         ps.mulPose(Axis.YP.rotationDegrees(180.0F - bodyYaw));
+        if (p.lean != 0) ps.mulPose(Axis.XP.rotationDegrees(-p.lean));
         ps.scale(-1.0F, -1.0F, 1.0F);
         ps.scale(1.05F, 1.05F, 1.05F);
         ps.translate(0.0F, -1.501F, 0.0F);

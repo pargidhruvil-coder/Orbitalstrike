@@ -329,6 +329,22 @@ public class CinematicDirector {
                 }
             }
             case IMPACT -> {
+                Vec3 gpi = fx.giantPos(0);
+                if (gpi != null && a >= tl.impact - 14 && a < tl.impact + 25) {
+                    // स्मैश: बगल से, विशाल VIP की मुट्ठियाँ टारगेट पर गिरती दिखें
+                    float G = ClientFx.StrikeFx.GIANT;
+                    Vec3 away = new Vec3(T.x - gpi.x, 0, T.z - gpi.z).normalize();
+                    Vec3 side = away.yRot((float) Math.PI / 2);
+                    Vec3 sp = T.add(side.scale(G * 1.6)).add(away.scale(G * 0.5)).add(0, G * 0.35, 0);
+                    Vec3 sl = T.add(away.scale(-G * 0.3)).add(0, G * 0.6, 0);
+                    boolean first = lastShot != T;
+                    lastShot = T;
+                    setCam(sp, yawTo(sp, sl), pitchTo(sp, sl), cut || first);
+                    return;
+                }
+                boolean back = lastShot == T;
+                lastShot = null;
+                if (back) cut = true;
                 double ang = baseAng + Math.toRadians((a - (tl.impact - 30)) * 0.25);
                 double r = 70 + Math.max(0, a - tl.impact) * 0.15;
                 pos = T.add(Math.cos(ang) * r, 34, Math.sin(ang) * r);

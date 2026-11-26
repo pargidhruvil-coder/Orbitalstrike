@@ -92,52 +92,60 @@ public class ClientFx {
 
         public float topY() { return PLANET_Y[Timeline.PLANETS - 1]; }
 
-        public static final float GIANT = 36F;
+        public static final float GIANT = 40F;
+        /** मुट्ठियाँ ज़मीन पर पड़ें: झुकाव 60°, हाथ -40° पर मुट्ठी पैरों से 0.934*G आगे होती है */
+        private static final float REACH = 0.934F;
+
+        private double giantAngle() {
+            return (id * 2.3) % (Math.PI * 2);
+        }
 
         /** विशाल VIP कहाँ खड़ा है (पैर), null = नहीं दिख रहा */
         public Vec3 giantPos(float partial) {
             if (tl.vajraStart < 0) return null;
             float t = time(partial);
-            if (t < tl.vajraStart || t > tl.impact + 75) return null;
-            double ang = (id * 2.3) % (Math.PI * 2);
-            Vec3 feet = pos.add(Math.cos(ang) * 44, -1, Math.sin(ang) * 44);
-            float p = Mth.clamp((t - tl.vajraStart) / 60F, 0, 1);
+            if (t < tl.vajraStart || t > tl.impact + 80) return null;
+            double ang = giantAngle();
+            Vec3 feet = pos.add(Math.cos(ang) * GIANT * REACH, -0.5, Math.sin(ang) * GIANT * REACH);
+            float p = Mth.clamp((t - tl.vajraStart) / 45F, 0, 1);
             p = 1 - (1 - p) * (1 - p) * (1 - p);
-            return feet.add(0, (1 - p) * 160, 0);
+            return feet.add(0, (1 - p) * 180, 0);
         }
 
         public float giantYaw() {
-            double ang = (id * 2.3) % (Math.PI * 2);
+            double ang = giantAngle();
             double dx = -Math.cos(ang), dz = -Math.sin(ang);       // टारगेट की ओर
             return (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90F;
         }
 
         public float giantAlpha(float partial) {
             float t = time(partial);
-            return Mth.clamp(Math.min((t - tl.vajraStart) / 25F, (tl.impact + 75 - t) / 30F), 0, 1);
+            return Mth.clamp(Math.min((t - tl.vajraStart) / 15F, (tl.impact + 80 - t) / 25F), 0, 1);
         }
 
-        /** हाथ ऊपर उठाना, फिर दोनों मुट्ठियाँ नीचे टारगेट पर */
+        /** दोनों हाथ सिर के ऊपर, दहाड़, फिर आगे झुककर दोनों मुट्ठियाँ टारगेट पर */
         public AlienRenderer.Pose giantPose(float partial) {
             float t = time(partial);
             AlienRenderer.Pose p = new AlienRenderer.Pose();
-            float raise = Mth.clamp((t - (tl.vajraStart + 55)) / 40F, 0, 1);
+            float raise = Mth.clamp((t - (tl.vajraStart + 45)) / 35F, 0, 1);
             raise = raise * raise * (3 - 2 * raise);
-            float slam = Mth.clamp((t - (tl.impact - 12)) / 12F, 0, 1);
-            slam = slam * slam;
-            float arm = Mth.lerp(slam, Mth.lerp(raise, -10, -178), -55);
-            p.rightArm = arm + Mth.sin(t * 0.5F) * 3 * (1 - slam);
-            p.leftArm = arm - Mth.sin(t * 0.5F) * 3 * (1 - slam);
-            p.rightArmOut = 6 + 10 * raise * (1 - slam);
-            p.leftArmOut = 6 + 10 * raise * (1 - slam);
-            p.lean = Mth.lerp(slam, -8 * raise, 38);
-            p.headPitch = Mth.lerp(slam, -15 * raise, 35);
-            if (t > tl.impact) {
-                float rec = Mth.clamp((t - tl.impact - 15) / 40F, 0, 1);
-                p.lean = Mth.lerp(rec, 38, 5);
-                p.rightArm = Mth.lerp(rec, -55, -5);
-                p.leftArm = Mth.lerp(rec, -55, -5);
-                p.headPitch = Mth.lerp(rec, 35, -10);
+            float slam = Mth.clamp((t - (tl.impact - 9)) / 9F, 0, 1);
+            slam = slam * slam * slam;
+            float shake = (1 - slam) * raise;
+            p.rightArm = Mth.lerp(slam, Mth.lerp(raise, -15, -176), -40) + Mth.sin(t * 1.7F) * 3 * shake;
+            p.leftArm = Mth.lerp(slam, Mth.lerp(raise, -15, -176), -40) - Mth.sin(t * 1.7F) * 3 * shake;
+            p.rightArmOut = Mth.lerp(slam, Mth.lerp(raise, 8, -6), -10);
+            p.leftArmOut = Mth.lerp(slam, Mth.lerp(raise, 8, -6), -10);
+            p.lean = Mth.lerp(slam, -10 * raise, 60);
+            p.headPitch = Mth.lerp(slam, -28 * raise, 30);
+            p.headYaw = Mth.sin(t * 2.3F) * 4 * shake;
+            if (t > tl.impact + 18) {
+                float rec = Mth.clamp((t - tl.impact - 18) / 40F, 0, 1);
+                rec = rec * rec * (3 - 2 * rec);
+                p.lean = Mth.lerp(rec, 60, 8);
+                p.rightArm = Mth.lerp(rec, -40, -8);
+                p.leftArm = Mth.lerp(rec, -40, -8);
+                p.headPitch = Mth.lerp(rec, 30, -10);
             }
             return p;
         }

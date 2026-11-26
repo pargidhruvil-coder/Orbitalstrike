@@ -250,8 +250,9 @@ public class CinematicDirector {
     }
 
     // दरवाज़ा शिप की दाईं (+X) तरफ़: लोकल (5.6, -1.8, 5.7) x SHIP_SCALE
+    // शिप से हमेशा दूर (x >= 55) रहने वाला शानदार रास्ता: बगल से धीरे-धीरे घूमकर दरवाज़े की ओर, फिर कट
     private static final Vec3[] APPROACH_PATH = {
-            SHIP.add(150, 28, 230), SHIP.add(115, 12, 120), SHIP.add(66, 0, 44), SHIP.add(44, -5.4, 20), SHIP.add(34, -5.4, 17.1), SHIP.add(28, -5.4, 17.1)};
+            SHIP.add(170, 40, 210), SHIP.add(140, 26, 130), SHIP.add(112, 14, 62), SHIP.add(92, 6, 18), SHIP.add(78, 0, 8), SHIP.add(66, -4, 14)};
 
     private void camera(Phase ph, int a, boolean cut) {
         Vec3 T = fx.pos;
@@ -273,7 +274,7 @@ public class CinematicDirector {
                     sc = Vec3.ZERO.lerp(APPROACH_PATH[0], 0.9).lerp(sc, (a - Timeline.APPROACH_START) / 8.0);
                 }
                 sceneSet(sc, cut);
-                Vec3 lk = u < 0.6F ? SHIP.add(0, 4, 12) : SHIP.add(16.8, -5.4, 17.1);   // आखिर में खुलते दरवाज़े पर
+                Vec3 lk = SHIP.add(0, 6, 10).lerp(SHIP.add(16.8, -5.4, 17.1), ease((u - 0.55F) / 0.45F));   // पूरा शिप, आखिर में दरवाज़ा
                 rotTo(eye, eye.add(lk.subtract(sc)), cut);
                 return;
             }
@@ -410,7 +411,8 @@ public class CinematicDirector {
         RenderSystem.clear(256, Minecraft.ON_OSX);   // GL_DEPTH_BUFFER_BIT
         FxDraw.beginOpaque();
         Vec3 earthPos = interior ? c.add(dir(180, 16).scale(100)) : c.add(dir(185, 34).scale(100));
-        FxDraw.sphere(ps, camera, earthPos, interior ? 40 : 52, FxDraw.fx("map_earth"), t * 0.06F, 23, sunDir, false, 1);
+        Vec3 earthLight = c.subtract(earthPos).normalize().add(sunDir.scale(0.6));
+        FxDraw.sphere(ps, camera, earthPos, interior ? 40 : 52, FxDraw.fx("map_earth"), t * 0.06F, 23, earthLight, false, 1);
         FxDraw.sphere(ps, camera, c.add(dir(150, -12).scale(100)), 6, FxDraw.fx("map_moon"), t * 0.1F, 6, sunDir, false, 1);
         FxDraw.end();
         FxDraw.begin(true);
@@ -449,7 +451,7 @@ public class CinematicDirector {
         RenderSystem.clear(256, Minecraft.ON_OSX);
         FxDraw.beginOpaque();
         Vec3 earth = c.add(dir(6, 38).scale(100));
-        FxDraw.sphere(ps, camera, earth, 52, FxDraw.fx("map_earth"), 40 + o * 0.15F, 23, sunDir, false, 1);
+        FxDraw.sphere(ps, camera, earth, 52, FxDraw.fx("map_earth"), 40 + o * 0.15F, 23, c.subtract(earth).normalize().add(sunDir.scale(0.6)), false, 1);
         FxDraw.end();
         Vec3 toCam = c.subtract(earth).normalize();
         Vec3 mark = earth.add(toCam.scale(52.5));

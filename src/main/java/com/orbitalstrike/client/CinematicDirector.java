@@ -58,6 +58,7 @@ public class CinematicDirector {
     private final Timeline tl;
     private final Vec3 eye;
     private final float playerYaw;
+    private final float playerPitch;
     private final Marker cam;
     private final CameraType savedType;
     private final List<Line> lines = new ArrayList<>();
@@ -91,7 +92,13 @@ public class CinematicDirector {
         CinematicDirector d = active;
         active = null;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null) mc.setCameraEntity(mc.player);
+        if (mc.player != null) {
+            mc.setCameraEntity(mc.player);
+            mc.player.setXRot(d.playerPitch);
+            mc.player.xRotO = d.playerPitch;
+            mc.player.yHeadRot = mc.player.getYRot();
+            mc.player.yHeadRotO = mc.player.yHeadRot;
+        }
         mc.options.setCameraType(d.savedType);
         if (mc.screen instanceof CinematicScreen) mc.setScreen(null);
     }
@@ -108,6 +115,7 @@ public class CinematicDirector {
         this.tl = fx.tl;
         this.eye = mc.player.getEyePosition();
         this.playerYaw = mc.player.getYRot();
+        this.playerPitch = mc.player.getXRot();
         this.savedType = mc.options.getCameraType();
         this.ending = 14 + (fx.id % 3);
         mc.options.setCameraType(CameraType.FIRST_PERSON);
@@ -187,6 +195,17 @@ public class CinematicDirector {
         lastPhase = ph;
         if (cam != null) camera(ph, a, cut);
 
+        if (ph == Phase.END && mc.player != null) {
+            // बोलते समय मुंडी हिलाना: ऊपर-नीचे सिर हिलाना + दाएँ-बाएँ घूमना
+            float e = a - (tl.impact + 70);
+            boolean talking = a >= tl.impact + 72;
+            float nod = talking ? Mth.sin(e * 0.45F) * 9 + Mth.sin(e * 0.17F) * 5 : 0;
+            float sway = talking ? Mth.sin(e * 0.13F) * 22 + Mth.sin(e * 0.31F) * 6 : 0;
+            mc.player.xRotO = mc.player.getXRot();
+            mc.player.setXRot(-4 + nod);
+            mc.player.yHeadRotO = mc.player.yHeadRot;
+            mc.player.yHeadRot = playerYaw + sway;
+        }
         for (int t = Math.max(lastAge + 1, a - 1); t <= a; t++) sounds(t);
         lastAge = a;
 
@@ -856,6 +875,8 @@ public class CinematicDirector {
                 if (alien) {
                     float base = l.speaker.equals("zara") ? 1.3F : l.speaker.equals("vip") ? 0.6F : 0.8F;
                     play(ModSounds.CHIRP.get(), base + mc.level.random.nextFloat() * 0.25F, 0.8F);
+                } else if (l.speaker.equals("player")) {
+                    if (chars % 4 == 0) play(SoundEvents.VILLAGER_AMBIENT, 0.85F + mc.level.random.nextFloat() * 0.35F, 0.8F);
                 } else {
                     play(ModSounds.BLIP.get(), 1.0F, 0.5F);
                 }

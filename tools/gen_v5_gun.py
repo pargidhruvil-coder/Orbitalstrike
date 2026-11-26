@@ -102,17 +102,15 @@ def model(hot):
            "crystal": "orbitalstrike:item/cannon_crystal", "white": "orbitalstrike:item/cannon_white", "particle": "orbitalstrike:item/cannon_black"}
     els = []
     for name, f, t, tx in P:
-        els.append({"name": name, "from": f, "to": t, "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]},
+        els.append({"name": name, "from": f, "to": t,
                     "faces": {fc: {"uv": FULL, "texture": "#" + tx} for fc in ("north", "south", "east", "west", "up", "down")}})
     m = {"textures": tex, "elements": els, "gui_light": "front",
          "display": {
-             "thirdperson_righthand": {"rotation": [0, -90, 55], "translation": [0, 4.0, 0.5], "scale": [0.68, 0.68, 0.68]},
-             "thirdperson_lefthand": {"rotation": [0, 90, -55], "translation": [0, 4.0, 0.5], "scale": [0.68, 0.68, 0.68]},
-             "firstperson_righthand": {"rotation": [0, -90, 25], "translation": [1.13, 3.2, 1.13], "scale": [0.52, 0.52, 0.52]},
-             "firstperson_lefthand": {"rotation": [0, 90, -25], "translation": [1.13, 3.2, 1.13], "scale": [0.52, 0.52, 0.52]},
-             "gui": {"rotation": [20, -30, 0], "translation": [0, 0, 0], "scale": [0.58, 0.58, 0.58]},
+             "thirdperson_righthand": {"rotation": [-90, 0, -15], "translation": [1.5, 1.0, -3.5], "scale": [0.62, 0.62, 0.62]},
+             "firstperson_righthand": {"rotation": [0, -90, 0], "translation": [1.5, 2.6, 0.5], "scale": [0.5, 0.5, 0.5]},
+             "gui": {"rotation": [15, -25, 0], "translation": [0, 0, 0], "scale": [0.55, 0.55, 0.55]},
              "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.4, 0.4, 0.4]},
-             "fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.66, 0.66, 0.66]}}}
+             "fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.6, 0.6, 0.6]}}}
     if not hot:
         m["overrides"] = [{"predicate": {"orbitalstrike:charge": 0.5}, "model": "orbitalstrike:item/orbital_cannon_charged"}]
     return m

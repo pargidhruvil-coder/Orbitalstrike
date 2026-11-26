@@ -55,6 +55,87 @@ public final class FxDraw {
         RenderSystem.setShaderColor(1, 1, 1, 1);
     }
 
+    /** ठोस (अपारदर्शी) चीज़ों के लिए: depth लिखो */
+    public static void beginOpaque() {
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+    }
+
+    /**
+     * असली 3D गोला (equirectangular नक्शे के साथ), रोशनी और छाया।
+     * lightDir = दुनिया में रोशनी की दिशा। emissive = खुद चमकता (सूरज)।
+     */
+    public static void sphere(PoseStack ps, Camera cam, Vec3 pos, float r, ResourceLocation tex, float spinDeg, float tiltDeg,
+                              Vec3 lightDir, boolean emissive, float alpha) {
+        if (alpha <= 0.003F || r <= 0.01F) return;
+        ps.pushPose();
+        Vec3 c = cam.getPosition();
+        ps.translate(pos.x - c.x, pos.y - c.y, pos.z - c.z);
+        ps.mulPose(Axis.ZP.rotationDegrees(tiltDeg));
+        ps.mulPose(Axis.YP.rotationDegrees(spinDeg));
+        Vec3 L = lightDir.normalize().zRot((float) Math.toRadians(tiltDeg)).yRot((float) -Math.toRadians(spinDeg));
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, tex);
+        Matrix4f m = ps.last().pose();
+        BufferBuilder bb = Tesselator.getInstance().getBuilder();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        final int LAT = 18, LON = 32;
+        for (int i = 0; i < LAT; i++) {
+            for (int j = 0; j < LON; j++) {
+                int[][] corners = {{i, j}, {i + 1, j}, {i + 1, j + 1}, {i, j + 1}};
+                for (int[] k : corners) {
+                    double th = Math.PI * k[0] / LAT, ph = 2 * Math.PI * k[1] / LON;
+                    float nx = (float) (Math.sin(th) * Math.cos(ph)), ny = (float) Math.cos(th), nz = (float) (Math.sin(th) * Math.sin(ph));
+                    float sh = emissive ? 1F : 0.1F + 0.95F * (float) Math.max(0, nx * L.x + ny * L.y + nz * L.z);
+                    sh = Math.min(1F, sh);
+                    bb.vertex(m, nx * r, ny * r, nz * r).uv(k[1] / (float) LON, k[0] / (float) LAT).color(sh, sh, sh, alpha).endVertex();
+                }
+            }
+        }
+        Tesselator.getInstance().end();
+        ps.popPose();
+    }
+
+    /** झुकी हुई समतल डिस्क (शनि की रिंग) */
+    public static void tiltedDisc(PoseStack ps, Camera cam, Vec3 pos, float size, ResourceLocation tex, float tiltDeg, float spinDeg, float shade) {
+        ps.pushPose();
+        Vec3 c = cam.getPosition();
+        ps.translate(pos.x - c.x, pos.y - c.y, pos.z - c.z);
+        ps.mulPose(Axis.ZP.rotationDegrees(tiltDeg));
+        ps.mulPose(Axis.YP.rotationDegrees(spinDeg));
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, tex);
+        Matrix4f m = ps.last().pose();
+        BufferBuilder bb = Tesselator.getInstance().getBuilder();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        bb.vertex(m, -size, 0, -size).uv(0, 0).color(shade, shade, shade, 1F).endVertex();
+        bb.vertex(m, size, 0, -size).uv(1, 0).color(shade, shade, shade, 1F).endVertex();
+        bb.vertex(m, size, 0, size).uv(1, 1).color(shade, shade, shade, 1F).endVertex();
+        bb.vertex(m, -size, 0, size).uv(0, 1).color(shade, shade, shade, 1F).endVertex();
+        Tesselator.getInstance().end();
+        ps.popPose();
+    }
+
+    /** कैमरा-सापेक्ष निर्देशांकों में टाइल होने वाला पैनल: o से a और b दिशा (b = ऊपर) */
+    public static void panel(PoseStack ps, ResourceLocation tex, double ox, double oy, double oz, double ax, double ay, double az,
+                             double bx, double by, double bz, float us, float vs, float r, float g, float bl) {
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, tex);
+        Matrix4f m = ps.last().pose();
+        BufferBuilder bb = Tesselator.getInstance().getBuilder();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        bb.vertex(m, (float) ox, (float) oy, (float) oz).uv(0, vs).color(r, g, bl, 1F).endVertex();
+        bb.vertex(m, (float) (ox + ax), (float) (oy + ay), (float) (oz + az)).uv(us, vs).color(r, g, bl, 1F).endVertex();
+        bb.vertex(m, (float) (ox + ax + bx), (float) (oy + ay + by), (float) (oz + az + bz)).uv(us, 0).color(r, g, bl, 1F).endVertex();
+        bb.vertex(m, (float) (ox + bx), (float) (oy + by), (float) (oz + bz)).uv(0, 0).color(r, g, bl, 1F).endVertex();
+        Tesselator.getInstance().end();
+    }
+
     /** कैमरे की तरफ़ मुँह वाला चौकोर */
     public static void billboard(PoseStack ps, Camera cam, Vec3 pos, float size, ResourceLocation tex,
                                  float r, float g, float b, float a, float roll) {

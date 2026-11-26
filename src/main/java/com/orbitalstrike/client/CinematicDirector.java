@@ -47,8 +47,8 @@ public class CinematicDirector {
     private enum Phase { SPACE, APPROACH, INTERIOR, PLANETS, SHIP, IMPACT, END }
 
     // अंतरिक्ष वाले सीन में शिप की जगह और पैमाना
-    private static final Vec3 SHIP = new Vec3(-18, -4, -150);
-    private static final float SHIP_SCALE = 1.5F;
+    private static final Vec3 SHIP = new Vec3(-30, -12, -260);
+    private static final float SHIP_SCALE = 3.0F;
     // अंदर के सीन में एलियन की जगह
     private static final Vec3 ZORO_POS = new Vec3(1.4, 0, -1.6);
     private static final Vec3 ZARA_POS = new Vec3(-1.4, 0, -1.6);
@@ -243,7 +243,7 @@ public class CinematicDirector {
 
     // दरवाज़ा शिप की दाईं (+X) तरफ़: लोकल (5.6, -1.8, 5.7) x SHIP_SCALE
     private static final Vec3[] APPROACH_PATH = {
-            SHIP.add(70, 12, 110), SHIP.add(55, 6, 55), SHIP.add(28, 0, 18), SHIP.add(16, -2.7, 8.5), SHIP.add(9.2, -2.7, 8.5), SHIP.add(5, -2.7, 8.5)};
+            SHIP.add(150, 28, 230), SHIP.add(115, 12, 120), SHIP.add(62, 0, 42), SHIP.add(34, -5.4, 17.1), SHIP.add(19, -5.4, 17.1), SHIP.add(9, -5.4, 17.1)};
 
     private void camera(Phase ph, int a, boolean cut) {
         Vec3 T = fx.pos;
@@ -254,7 +254,7 @@ public class CinematicDirector {
                 float u = a / (float) Timeline.APPROACH_START;
                 Vec3 sc = Vec3.ZERO.lerp(APPROACH_PATH[0], u * u * 0.9);
                 sceneSet(sc, cut);
-                Vec3 lk = SHIP.add(30 - a * 0.25, 0, 0);
+                Vec3 lk = SHIP.add(60 - a * 0.5, 6, 0);
                 rotTo(eye, eye.add(lk.subtract(sc)), cut);
                 return;
             }
@@ -265,7 +265,7 @@ public class CinematicDirector {
                     sc = Vec3.ZERO.lerp(APPROACH_PATH[0], 0.9).lerp(sc, (a - Timeline.APPROACH_START) / 8.0);
                 }
                 sceneSet(sc, cut);
-                Vec3 lk = u < 0.72F ? SHIP.add(0, 2, 6) : sc.add(-10, 0, 0);
+                Vec3 lk = u < 0.72F ? SHIP.add(0, 4, 12) : sc.add(-10, 0, 0);
                 rotTo(eye, eye.add(lk.subtract(sc)), cut);
                 return;
             }
@@ -361,27 +361,29 @@ public class CinematicDirector {
         Vec3 sc = d.sceneCamO.lerp(d.sceneCam, pt);
         boolean interior = ph == Phase.INTERIOR;
 
-        // पृष्ठभूमि: गैलेक्सी, पृथ्वी, सूरज, चाँद
+        // पृष्ठभूमि: गैलेक्सी, फिर 3D पृथ्वी और चाँद, सूरज
         RenderSystem.disableDepthTest();
         GalaxySkyRenderer.renderSkybox(ps, 1.0F, false);
         Vec3 c = camera.getPosition();
-        FxDraw.begin(false);
-        if (interior) {
-            FxDraw.billboard(ps, camera, c.add(dir(180, 14).scale(100)), 52, FxDraw.env("earth"), 1, 1, 1, 1, t * 0.01F);
-        } else {
-            FxDraw.billboard(ps, camera, c.add(dir(185, 30).scale(100)), 64, FxDraw.env("earth"), 1, 1, 1, 1, t * 0.01F);
-        }
-        FxDraw.billboard(ps, camera, c.add(dir(150, -12).scale(100)), 7, FxDraw.env("moon"), 1, 1, 1, 1, 0);
-        FxDraw.end();
+        Vec3 sunDir = dir(235, -22);
         FxDraw.begin(true);
-        Vec3 sunPos = c.add(dir(235, -22).scale(100));
+        Vec3 sunPos = c.add(sunDir.scale(100));
         FxDraw.billboard(ps, camera, sunPos, 14, FxDraw.env("sun"), 1, 1, 1, 1, 0);
         FxDraw.billboard(ps, camera, sunPos, 40, FxDraw.fx("glow"), 1F, 0.9F, 0.7F, 0.35F, 0);   // लेंस फ़्लेयर
         FxDraw.billboard(ps, camera, c.add(dir(225, -10).scale(100)), 4, FxDraw.fx("glow"), 0.6F, 0.8F, 1F, 0.4F, 0);
         FxDraw.billboard(ps, camera, c.add(dir(212, 4).scale(100)), 7, FxDraw.fx("ring"), 0.7F, 0.6F, 1F, 0.25F, 0);
         FxDraw.end();
-
         RenderSystem.clear(256, Minecraft.ON_OSX);   // GL_DEPTH_BUFFER_BIT
+        FxDraw.beginOpaque();
+        Vec3 earthPos = interior ? c.add(dir(180, 16).scale(100)) : c.add(dir(185, 34).scale(100));
+        FxDraw.sphere(ps, camera, earthPos, interior ? 40 : 52, FxDraw.fx("map_earth"), t * 0.06F, 23, sunDir, false, 1);
+        FxDraw.sphere(ps, camera, c.add(dir(150, -12).scale(100)), 6, FxDraw.fx("map_moon"), t * 0.1F, 6, sunDir, false, 1);
+        FxDraw.end();
+        FxDraw.begin(true);
+        FxDraw.billboard(ps, camera, earthPos, interior ? 46 : 60, FxDraw.fx("glow"), 0.35F, 0.6F, 1F, 0.35F, 0);   // वायुमंडल
+        FxDraw.end();
+
+        RenderSystem.clear(256, Minecraft.ON_OSX);
         RenderSystem.enableDepthTest();
         MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
         ps.pushPose();
@@ -410,42 +412,41 @@ public class CinematicDirector {
     private void renderInterior(PoseStack ps, MultiBufferSource buf, float t) {
         boolean alarm = t > 500 && t < 690;
         boolean alarmOn = alarm && ((int) (t / 6)) % 2 == 0;
-        // फ़र्श
-        for (int x = -4; x < 4; x++)
-            for (int z = -4; z < 4; z++)
-                box(ps, buf, (x + z) % 2 == 0 ? Blocks.POLISHED_BLACKSTONE : Blocks.POLISHED_BLACKSTONE_BRICKS, x, -1, z, 1, 1, 1);
-        box(ps, buf, Blocks.VERDANT_FROGLIGHT, -3.6, -0.02, -4, 0.15, 0.04, 8);
-        box(ps, buf, Blocks.VERDANT_FROGLIGHT, 3.45, -0.02, -4, 0.15, 0.04, 8);
-        // छत
-        for (int x = -4; x < 4; x++)
-            for (int z = -4; z < 4; z++)
-                box(ps, buf, (x == -1 || x == 0) ? (alarmOn ? Blocks.REDSTONE_BLOCK : Blocks.SEA_LANTERN) : Blocks.BLACK_CONCRETE, x, 4, z, 1, 1, 1);
-        // बगल की दीवारें
-        for (int z = -4; z < 4; z++) {
-            for (int s = -1; s <= 1; s += 2) {
-                double x = s < 0 ? -5 : 4;
-                box(ps, buf, Blocks.BLACK_CONCRETE, x, 0, z, 1, 4, 1);
-                box(ps, buf, z % 2 == 0 ? Blocks.PURPLE_STAINED_GLASS : Blocks.CRYING_OBSIDIAN, s < 0 ? -4.05 : 3.95, 1.5, z + 0.3, 0.1, 1.8, 0.4);
-            }
+        // साइंस-फ़िक्शन पैनल: फ़र्श, छत, दीवारें (खिड़की वाली सामने की दीवार में छेद)
+        float rr = alarmOn ? 1F : 1F, gg = alarmOn ? 0.45F : 1F, bb = alarmOn ? 0.45F : 1F;
+        ResourceLocation WALL = FxDraw.fx("panel_wall"), FLOOR = FxDraw.fx("panel_floor"), CEIL = FxDraw.fx("panel_ceiling");
+        FxDraw.beginOpaque();
+        FxDraw.panel(ps, FLOOR, -4, 0, 4, 8, 0, 0, 0, 0, -8, 4, 4, rr, gg, bb);
+        FxDraw.panel(ps, CEIL, -4, 4, -4, 8, 0, 0, 0, 0, 8, 4, 4, rr, gg, bb);
+        FxDraw.panel(ps, WALL, -4, 0, 4, 0, 0, -8, 0, 4, 0, 4, 2, rr, gg, bb);
+        FxDraw.panel(ps, WALL, 4, 0, -4, 0, 0, 8, 0, 4, 0, 4, 2, rr, gg, bb);
+        FxDraw.panel(ps, WALL, 4, 0, 4, -8, 0, 0, 0, 4, 0, 4, 2, rr, gg, bb);
+        FxDraw.panel(ps, WALL, -4, 0, -4, 8, 0, 0, 0, 1, 0, 4, 0.5F, rr, gg, bb);
+        FxDraw.panel(ps, WALL, -4, 3.2, -4, 8, 0, 0, 0, 0.8, 0, 4, 0.4F, rr, gg, bb);
+        FxDraw.panel(ps, WALL, -4, 1, -4, 1, 0, 0, 0, 2.2, 0, 0.5F, 1.1F, rr, gg, bb);
+        FxDraw.panel(ps, WALL, 3, 1, -4, 1, 0, 0, 0, 2.2, 0, 0.5F, 1.1F, rr, gg, bb);
+        FxDraw.panel(ps, FxDraw.fx("panel_hazard"), -3, 0.01, -3.25, 6, 0, 0, 0, 0, -0.3, 6, 1, 1, 1, 1);
+        FxDraw.panel(ps, FxDraw.fx("panel_hazard"), -1, 0.01, 3.7, 2, 0, 0, 0, 0, 0.3, 2, 1, 1, 1, 1);
+        for (int s = -1; s <= 1; s += 2) {      // कंसोल की स्क्रीन
+            double cx = s * 1.4;
+            FxDraw.panel(ps, FxDraw.fx("panel_screen"), cx - 0.8, 0.95, -2.93, 1.6, 0, 0, 0, 0.7, 0, 1, 1, rr, gg, bb);
         }
-        // पीछे की दीवार (दरवाज़ा)
-        for (int x = -4; x < 4; x++) box(ps, buf, Blocks.BLACK_CONCRETE, x, 0, 4, 1, 4, 1);
+        FxDraw.end();
+        RenderSystem.enableDepthTest();
+        box(ps, buf, Blocks.VERDANT_FROGLIGHT, -3.9, 0.0, -4, 0.1, 0.05, 8);
+        box(ps, buf, Blocks.VERDANT_FROGLIGHT, 3.8, 0.0, -4, 0.1, 0.05, 8);
         box(ps, buf, Blocks.POLISHED_BLACKSTONE, -1, 0, 3.9, 2, 2.8, 0.1);
         box(ps, buf, Blocks.VERDANT_FROGLIGHT, -1.1, 2.8, 3.85, 2.2, 0.1, 0.1);
-        // सामने: बड़ी खिड़की (बीच में खुला, बाहर अंतरिक्ष और पृथ्वी)
-        box(ps, buf, Blocks.BLACK_CONCRETE, -4, 0, -5, 8, 1, 1);
-        box(ps, buf, Blocks.BLACK_CONCRETE, -4, 3.2, -5, 8, 0.8, 1);
-        box(ps, buf, Blocks.BLACK_CONCRETE, -4, 1, -5, 1, 2.2, 1);
-        box(ps, buf, Blocks.BLACK_CONCRETE, 3, 1, -5, 1, 2.2, 1);
         box(ps, buf, Blocks.CRYING_OBSIDIAN, -3.05, 0.95, -4.05, 6.1, 0.1, 0.1);
         box(ps, buf, Blocks.CRYING_OBSIDIAN, -3.05, 3.15, -4.05, 6.1, 0.1, 0.1);
         box(ps, buf, Blocks.CRYING_OBSIDIAN, -0.05, 1.0, -4.05, 0.1, 2.2, 0.1);
+        box(ps, buf, alarmOn ? Blocks.REDSTONE_LAMP : Blocks.SEA_LANTERN, -0.6, 3.9, -0.6, 1.2, 0.1, 1.2);
         // कंसोल
         for (int s = -1; s <= 1; s += 2) {
             double cx = s * 1.4;
             box(ps, buf, Blocks.POLISHED_DEEPSLATE, cx - 1.0, 0, -3.0, 2.0, 0.85, 0.7);
             box(ps, buf, Blocks.SMOOTH_STONE, cx - 1.05, 0.85, -3.05, 2.1, 0.08, 0.8);
-            box(ps, buf, alarmOn ? Blocks.RED_STAINED_GLASS : Blocks.LIGHT_BLUE_STAINED_GLASS, cx - 0.8, 0.95, -3.0, 1.6, 0.7, 0.06);
+            box(ps, buf, Blocks.GRAY_CONCRETE, cx - 0.85, 0.9, -3.02, 1.7, 0.8, 0.06);
             for (int k = 0; k < 4; k++) {
                 boolean on = ((int) (t / 5) + k + s) % 3 != 0;
                 box(ps, buf, on ? Blocks.LIME_CONCRETE : Blocks.GREEN_CONCRETE, cx - 0.8 + k * 0.35, 0.94, -2.55, 0.12, 0.04, 0.12);

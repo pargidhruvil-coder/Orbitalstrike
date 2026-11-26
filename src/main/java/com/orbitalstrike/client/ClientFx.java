@@ -1,5 +1,6 @@
 package com.orbitalstrike.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.orbitalstrike.OrbitalStrikeMod;
 import com.orbitalstrike.Timeline;
@@ -35,6 +36,18 @@ public class ClientFx {
     public static final ChatFormatting[] PLANET_COLOR = {ChatFormatting.WHITE, ChatFormatting.RED, ChatFormatting.GREEN,
             ChatFormatting.LIGHT_PURPLE, ChatFormatting.YELLOW, ChatFormatting.BLUE, ChatFormatting.DARK_PURPLE,
             ChatFormatting.GOLD, ChatFormatting.GOLD};
+    public static final ResourceLocation[] PLANET_MAP = {
+            FxDraw.fx("map_moon"), FxDraw.fx("map_mars"), FxDraw.fx("map_mercury"), FxDraw.fx("map_venus"), FxDraw.fx("map_jupiter"),
+            FxDraw.fx("map_saturn"), FxDraw.fx("map_rahu"), FxDraw.fx("map_ketu"), FxDraw.fx("map_sun")};
+    public static final float[] PLANET_RADIUS = {2.6F, 3.0F, 2.2F, 3.4F, 6.2F, 5.0F, 4.2F, 4.2F, 9.5F};
+    public static final float[] PLANET_TILT = {6, 25, 0, 177, 3, 27, 40, -30, 7};
+    private static final ResourceLocation SATURN_RING = FxDraw.fx("saturn_ring");
+    private static final ResourceLocation DOME = FxDraw.fx("dome");
+    private static final net.minecraft.world.level.block.Block[] DEBRIS = {
+            net.minecraft.world.level.block.Blocks.STONE, net.minecraft.world.level.block.Blocks.DIRT,
+            net.minecraft.world.level.block.Blocks.GRASS_BLOCK, net.minecraft.world.level.block.Blocks.COBBLESTONE,
+            net.minecraft.world.level.block.Blocks.DEEPSLATE, net.minecraft.world.level.block.Blocks.ANDESITE,
+            net.minecraft.world.level.block.Blocks.OAK_LOG};
     private static final float[] PLANET_Y = new float[Timeline.PLANETS];
     static {
         float y = 38;
@@ -85,14 +98,14 @@ public class ClientFx {
             float t = time(partial);
             if (t < tl.vajraStart || t > tl.impact + 70) return null;
             Vec3 cannonOff = new Vec3(0, 0, ShipModel.CANNON_Z * SHIP_SCALE).yRot((float) Math.toRadians(SHIP_YAW));
-            Vec3 hover = pos.add(-cannonOff.x, topY() + 30, -cannonOff.z);
+            Vec3 hover = pos.add(-cannonOff.x, topY() - ShipModel.CANNON_Y * SHIP_SCALE + 18, -cannonOff.z);
             if (t > tl.impact + 20) {           // प्रहार के बाद शिप ऊपर निकल जाता है
                 float p = (t - tl.impact - 20) / 50F;
-                return hover.add(p * p * 60, p * p * 160, 0);
+                return hover.add(p * p * 120, p * p * 260, 0);
             }
             float p = Mth.clamp((t - tl.vajraStart) / 70F, 0, 1);
             float e = 1 - (1 - p) * (1 - p) * (1 - p);
-            Vec3 from = pos.add(-260, 200, 120);
+            Vec3 from = pos.add(-420, 260, 180);
             return from.lerp(hover, e).add(0, Math.sin(t * 0.08) * 0.6, 0);
         }
 
@@ -107,7 +120,7 @@ public class ClientFx {
         }
     }
 
-    public static final float SHIP_SCALE = 1.6F;
+    public static final float SHIP_SCALE = 3.5F;
     public static final float SHIP_YAW = -65F;
 
     public static final Map<Integer, StrikeFx> ACTIVE = new HashMap<>();
@@ -156,6 +169,40 @@ public class ClientFx {
         for (StrikeFx fx : ACTIVE.values()) render(fx, ps, cam, pt);
     }
 
+    private static void renderDebris(StrikeFx fx, PoseStack ps, Camera cam, float t) {
+        Timeline tl = fx.tl;
+        float liftStart = Math.max(tl.planetsStart, tl.impact - 90);
+        if (t < liftStart || t > tl.impact + 50) return;
+        java.util.Random r = new java.util.Random(fx.id * 7919L);
+        MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
+        Vec3 cp = cam.getPosition();
+        float lift = Mth.clamp((t - liftStart) / (tl.impact - liftStart), 0, 1);
+        lift = lift * lift * (3 - 2 * lift);
+        for (int k = 0; k < 48; k++) {
+            double a = r.nextDouble() * Math.PI * 2, rad = 5 + r.nextDouble() * 34;
+            float size = 0.8F + r.nextFloat() * 2.0F, rise = 5 + r.nextFloat() * 22, spin = 1 + r.nextFloat() * 4;
+            net.minecraft.world.level.block.Block b = DEBRIS[r.nextInt(DEBRIS.length)];
+            float delay = r.nextFloat() * 0.4F;
+            float myLift = Mth.clamp((lift - delay) / (1 - delay), 0, 1);
+            Vec3 dir = new Vec3(Math.cos(a), 0, Math.sin(a));
+            Vec3 p = fx.pos.add(dir.scale(rad)).add(0, myLift * rise + Math.sin(t * 0.1 + k) * 0.5 * myLift - 1, 0);
+            float sc = size;
+            if (t > tl.impact) {
+                float dt = t - tl.impact;
+                p = p.add(dir.scale(dt * 1.6 * (1 + rad / 30))).add(0, dt * 1.1 - dt * dt * 0.035, 0);
+                sc = size * Mth.clamp(1 - (dt - 30) / 20F, 0, 1);
+            }
+            if (myLift <= 0.01F || sc <= 0.02F) continue;
+            ps.pushPose();
+            ps.translate(p.x - cp.x, p.y - cp.y, p.z - cp.z);
+            ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(t * spin * 3));
+            ps.mulPose(com.mojang.math.Axis.XP.rotationDegrees(t * spin * 2));
+            FxDraw.box(ps, buf, b, -sc / 2, -sc / 2, -sc / 2, sc, sc, sc);
+            ps.popPose();
+        }
+        buf.endBatch();
+    }
+
     private static void render(StrikeFx fx, PoseStack ps, Camera cam, float pt) {
         Timeline tl = fx.tl;
         float t = fx.time(pt);
@@ -187,14 +234,32 @@ public class ClientFx {
         }
         FxDraw.end();
 
-        // ग्रह
-        FxDraw.begin(false);
+        // ग्रह: असली 3D गोले, सूरज से रोशनी
+        Vec3 sunP = fx.planetVisible(Timeline.PLANETS - 1, pt) ? fx.planetPos(Timeline.PLANETS - 1, pt) : c.add(60, 400, 40);
+        FxDraw.beginOpaque();
         for (int i = 0; i < Timeline.PLANETS; i++) {
             if (!fx.planetVisible(i, pt)) continue;
             Vec3 p = fx.planetPos(i, pt);
-            FxDraw.billboard(ps, cam, p, PLANET_SIZE[i], PLANET_TEX[i], 1, 1, 1, fadeOut, 0);
+            Vec3 L = sunP.subtract(p);
+            if (L.lengthSqr() < 1) L = new Vec3(0.4, 1, 0.3);
+            boolean sun = i == Timeline.PLANETS - 1;
+            FxDraw.sphere(ps, cam, p, PLANET_RADIUS[i], PLANET_MAP[i], t * (1.2F + i * 0.3F), PLANET_TILT[i], L, sun, fadeOut);
         }
         FxDraw.end();
+        if (fx.planetVisible(5, pt)) {    // शनि की रिंग
+            FxDraw.begin(false);
+            RenderSystem.enableDepthTest();
+            FxDraw.tiltedDisc(ps, cam, fx.planetPos(5, pt), 11.5F, SATURN_RING, PLANET_TILT[5], t * 0.5F, 0.95F * fadeOut + 0.05F);
+            FxDraw.end();
+        }
+        if (fx.planetVisible(Timeline.PLANETS - 1, pt)) {   // सूरज की चमक
+            FxDraw.begin(true);
+            FxDraw.billboard(ps, cam, sunP, 26, GLOW, 1F, 0.85F, 0.5F, 0.8F * fadeOut, 0);
+            FxDraw.end();
+        }
+
+        // हवा में उठता मलबा (प्रहार से पहले), फिर धमाके में चारों ओर उड़ता है
+        renderDebris(fx, ps, cam, t);
 
         // एलियन शिप
         Vec3 sp = fx.shipPos(pt);
@@ -225,6 +290,31 @@ public class ClientFx {
             FxDraw.cylinder(ps, cam, c, h, rr * 2.2F, BEAM, 1F, 0.8F, 0.4F, 0.55F * a, -t * 0.05F);
             FxDraw.cylinder(ps, cam, c, h, rr * 4.5F, BEAM, 0.6F, 0.4F, 1F, 0.25F * a, -t * 0.03F);
             FxDraw.billboard(ps, cam, c.add(0, 1, 0), rr * 5, GLOW, 1F, 0.9F, 0.7F, a, 0);
+            FxDraw.end();
+        }
+
+        // बीम के चारों ओर घूमते छल्ले
+        if (beamIn > 0 && beamOut > 0) {
+            Vec3 shipNow2 = fx.shipPos(pt);
+            float h2 = shipNow2 != null ? (float) (ShipModel.cannonWorld(shipNow2, SHIP_YAW, SHIP_SCALE).y - c.y) : (float) (topY - c.y);
+            float rr = t < tl.impact ? 2 + beamIn * 3 : 9;
+            FxDraw.begin(true);
+            for (int k = 0; k < 7; k++) {
+                float frac = ((k / 7F) + t * 0.015F) % 1F;
+                FxDraw.flat(ps, cam, c.add(0, frac * h2, 0), rr * (1.2F + 0.4F * Mth.sin(t * 0.3F + k)), RING, 0.8F, 0.5F, 1F, 0.7F * beamIn * beamOut, t * 6 + k * 40);
+            }
+            FxDraw.end();
+        }
+
+        // 3D शॉकवेव गुंबद
+        float dm = t - tl.impact;
+        if (dm >= 0 && dm < 30) {
+            float p = dm / 30F;
+            float R = 6 + p * com.orbitalstrike.Config.CRATER_RADIUS.get() * 2.6F;
+            FxDraw.begin(true);
+            RenderSystem.enableDepthTest();
+            FxDraw.sphere(ps, cam, c, R, DOME, t * 3, 0, new Vec3(0, 1, 0), true, 0.55F * (1 - p));
+            FxDraw.sphere(ps, cam, c, R * 0.7F, DOME, -t * 4, 0, new Vec3(0, 1, 0), true, 0.4F * (1 - p));
             FxDraw.end();
         }
 

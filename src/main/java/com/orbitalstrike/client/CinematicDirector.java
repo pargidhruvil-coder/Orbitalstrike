@@ -122,7 +122,7 @@ public class CinematicDirector {
     private static Vec3 v(double x, double y, double z) { return new Vec3(x, y, z); }
 
     private void buildScript() {
-        ChatFormatting zo = ChatFormatting.GREEN, za = ChatFormatting.LIGHT_PURPLE;
+        ChatFormatting zo = ChatFormatting.GREEN, za = ChatFormatting.GOLD;
         if (tl.mode == Timeline.LONG) {
             lines.add(new Line(262, 70, "zara", za, "z1"));
             lines.add(new Line(345, 70, "zoro", zo, "z2"));
@@ -134,8 +134,8 @@ public class CinematicDirector {
             lines.add(new Line(692, 45, "zara", za, "z7"));
             lines.add(new Line(742, 55, "zoro", zo, "z8"));
             lines.add(new Line(802, 50, "zara", za, "z8b"));
-            lines.add(new Line(tl.vajraStart + 20, 70, "zara", za, "z9"));
-            lines.add(new Line(tl.impact - 45, 45, "zara", za, "z10"));
+            lines.add(new Line(tl.vajraStart + 20, 70, "vip", ChatFormatting.LIGHT_PURPLE, "z9"));
+            lines.add(new Line(tl.impact - 45, 45, "vip", ChatFormatting.LIGHT_PURPLE, "z10"));
 
             Vec3 zoroHead = ZORO_POS.add(0, 1.75, 0), zaraHead = ZARA_POS.add(0, 1.75, 0);
             shots.add(new Shot(250, v(0, 1.8, 3.6), v(0, 1.7, 2.5), v(0, 1.3, -3), v(0, 1.4, -3)));
@@ -148,8 +148,8 @@ public class CinematicDirector {
             shots.add(new Shot(690, v(-1.4, 1.7, 1.7), v(-1.4, 1.7, 1.4), v(-1.4, 1.75, -0.4), v(-1.4, 1.75, -0.4)));
             shots.add(new Shot(735, v(0, 0.9, 1.6), v(0, 0.95, 1.3), v(0, 1.9, -0.8), v(0, 1.95, -0.8)));
         } else if (tl.mode == Timeline.MEDIUM) {
-            lines.add(new Line(tl.vajraStart + 5, 55, "zara", za, "z9"));
-            lines.add(new Line(tl.impact - 45, 45, "zara", za, "z10"));
+            lines.add(new Line(tl.vajraStart + 5, 55, "vip", ChatFormatting.LIGHT_PURPLE, "z9"));
+            lines.add(new Line(tl.impact - 45, 45, "vip", ChatFormatting.LIGHT_PURPLE, "z10"));
         }
         lines.add(new Line(tl.impact + 72, Math.max(40, tl.end - tl.impact - 75), "player", ChatFormatting.WHITE, "l" + ending));
     }
@@ -581,7 +581,7 @@ public class CinematicDirector {
         // एलियन
         Vec3 zp = path(ZORO_PATH, t), zap = path(ZARA_PATH, t);
         AlienRenderer.render(ps, buf, AlienRenderer.ZORO, zp.x, 0, zp.z, alienYaw(ZORO_PATH, t, zoroYaw(t)), zoroPose(t));
-        AlienRenderer.render(ps, buf, AlienRenderer.ZARA, zap.x, 0, zap.z, alienYaw(ZARA_PATH, t, zaraYaw(t)), zaraPose(t));
+        AlienRenderer.render(ps, buf, AlienRenderer.ZAMZAM, zap.x, 0, zap.z, alienYaw(ZARA_PATH, t, zaraYaw(t)), zaraPose(t));
     }
 
     private boolean speaking(String who, float t) {
@@ -833,12 +833,12 @@ public class CinematicDirector {
         int boxW = Math.min(w - 40, 380);
         int boxH = 52, x0 = (w - boxW) / 2, x1 = x0 + boxW, y1 = h - bar - 6, y0 = y1 - boxH;
         g.fill(x0, y0, x1, y1, 0xC0000000);
-        g.fill(x0, y0, x1, y0 + 1, l.speaker.equals("zara") ? 0xFFC060FF : l.speaker.equals("zoro") ? 0xFF80FF60 : 0xFFFFFFFF);
+        g.fill(x0, y0, x1, y0 + 1, l.speaker.equals("vip") ? 0xFFC060FF : l.speaker.equals("zara") ? 0xFFFFA030 : l.speaker.equals("zoro") ? 0xFF80FF60 : 0xFFFFFFFF);
         int px = x0 + 6, py = y0 + 6, ps = 40;
         if (l.speaker.equals("player")) {
             if (mc.player != null) PlayerFaceRenderer.draw(g, mc.player.getSkinTextureLocation(), px, py, ps);
         } else {
-            ResourceLocation skin = l.speaker.equals("zara") ? AlienRenderer.ZARA : AlienRenderer.ZORO;
+            ResourceLocation skin = l.speaker.equals("vip") ? AlienRenderer.ZARA : l.speaker.equals("zara") ? AlienRenderer.ZAMZAM : AlienRenderer.ZORO;
             g.blit(skin, px, py, ps, ps, 8, 8, 8, 8, 64, 64);
             RenderSystem.enableBlend();
             g.blit(skin, px, py, ps, ps, 40, 8, 8, 8, 64, 64);     // ऊपरी परत (हैट) भी, जैसे गेम में दिखता है
@@ -850,10 +850,10 @@ public class CinematicDirector {
         int chars = Math.min(full.length(), (int) ((t - l.start) * 1.6F));
         if (l != lastLine) { lastLine = l; lastChars = -1; }
         if (chars > lastChars) {
-            boolean alien = l.speaker.equals("zoro") || l.speaker.equals("zara");
+            boolean alien = l.speaker.equals("zoro") || l.speaker.equals("zara") || l.speaker.equals("vip");
             if (chars < full.length() && (alien ? chars % 3 == 0 : chars % 2 == 0)) {
                 if (alien) {
-                    float base = l.speaker.equals("zara") ? 1.3F : 0.8F;
+                    float base = l.speaker.equals("zara") ? 1.3F : l.speaker.equals("vip") ? 0.6F : 0.8F;
                     play(ModSounds.CHIRP.get(), base + mc.level.random.nextFloat() * 0.25F, 0.8F);
                 } else {
                     play(ModSounds.BLIP.get(), 1.0F, 0.5F);

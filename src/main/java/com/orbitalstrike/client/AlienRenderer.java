@@ -22,6 +22,17 @@ public final class AlienRenderer {
     public static final ResourceLocation ZARA = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zara.png");
     /** VIP Dhruvil की आँखें (सिर्फ़ आँख वाले पिक्सेल) — Enderman जैसी चमक के लिए */
     public static final ResourceLocation ZARA_EYES = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zara_eyes.png");
+    /** शिप के अंदर वाले दोनों एलियन: ज़ोरो (हरी आँखें) और ज़मज़म (नारंगी आँखें) */
+    public static final ResourceLocation ZAMZAM = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zamzam.png");
+    private static final ResourceLocation ZORO_EYES = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zoro_eyes.png");
+    private static final ResourceLocation ZAMZAM_EYES = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zamzam_eyes.png");
+
+    private static ResourceLocation eyesFor(ResourceLocation tex) {
+        if (tex.equals(ZARA)) return ZARA_EYES;
+        if (tex.equals(ZORO)) return ZORO_EYES;
+        if (tex.equals(ZAMZAM)) return ZAMZAM_EYES;
+        return null;
+    }
 
     private static PlayerModel<LivingEntity> model;
 
@@ -77,8 +88,9 @@ public final class AlienRenderer {
         ps.translate(0.0F, -1.501F, 0.0F);
         RenderType rt = alpha < 0.99F ? RenderType.entityTranslucent(tex) : RenderType.entityCutoutNoCull(tex);
         m.renderToBuffer(ps, buf.getBuffer(rt), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1, 1, 1, alpha);
-        if (tex.equals(ZARA) && alpha > 0.5F) {
-            m.renderToBuffer(ps, buf.getBuffer(RenderType.eyes(ZARA_EYES)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
+        ResourceLocation eyes = eyesFor(tex);
+        if (eyes != null && alpha > 0.5F) {
+            m.renderToBuffer(ps, buf.getBuffer(RenderType.eyes(eyes)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
         }
         ps.popPose();
     }

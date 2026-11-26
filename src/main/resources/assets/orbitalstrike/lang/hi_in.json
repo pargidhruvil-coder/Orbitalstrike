@@ -82,7 +82,7 @@
   "subtitles.orbitalstrike.ready": "कैनन तैयार",
   "subtitles.orbitalstrike.vajra": "वज्र गिर रहा है",
   "subtitles.orbitalstrike.voice": "रहस्यमयी आवाज़",
-  "dialog.orbitalstrike.z1": "Crazy! Crazy Gamer! Wake up, a signal from Earth!",
+  "dialog.orbitalstrike.z1": "Zoro! Zoro! Wake up, a signal from Earth!",
   "dialog.orbitalstrike.z2": "Earth? Those tiny block-builders? What do they want now?",
   "dialog.orbitalstrike.z3": "Someone down there just charged the NAVAGRAHA CANNON!",
   "dialog.orbitalstrike.z4": "WHAT?! That thing cracks planets!",
@@ -92,8 +92,8 @@
   "dialog.orbitalstrike.z8": "FOR THE GALAXYYY!",
   "dialog.orbitalstrike.z9": "Enough! I'll smash it MYSELF!",
   "dialog.orbitalstrike.z10": "VIP DHRUVIL... SMAAAASH!!!",
-  "speaker.orbitalstrike.zoro": "CRAZY GAMER",
-  "speaker.orbitalstrike.zara": "VIP DHRUVIL",
+  "speaker.orbitalstrike.zoro": "ZORO",
+  "speaker.orbitalstrike.zara": "ZAMZAM",
   "subtitles.orbitalstrike.chirp": "एलियन की बातें",
   "subtitles.orbitalstrike.door": "दरवाज़ा खुला",
   "subtitles.orbitalstrike.button": "लाल बटन",
@@ -103,5 +103,6 @@
   "dialog.orbitalstrike.z4b": "Oof... so... dizzy...",
   "dialog.orbitalstrike.z8b": "Main cannon locked on Earth... FIRE!",
   "cinematic.orbitalstrike.planet_aligned": "✦ संरेखित ✦",
-  "cinematic.orbitalstrike.lockon": "⚠ निशाना: पृथ्वी ⚠"
+  "cinematic.orbitalstrike.lockon": "⚠ निशाना: पृथ्वी ⚠",
+  "speaker.orbitalstrike.vip": "VIP DHRUVIL"
 }

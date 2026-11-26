@@ -154,8 +154,8 @@ def make_skin(name, eye):
     px[bx + 3, by + 9] = eye; px[bx + 4, by + 9] = eye                  # glowing belt core
     img.save(os.path.join(ENT, f"alien_{name}.png"))
 
-make_skin("zoro", (120, 255, 80, 255))
-make_skin("zara", (200, 90, 255, 255))
+# make_skin("zoro", (120, 255, 80, 255))
+# make_skin("zara", (200, 90, 255, 255))
 
 # ------------------------------------------------------------------ shuttle icon 16x16
 def shuttle_icon():

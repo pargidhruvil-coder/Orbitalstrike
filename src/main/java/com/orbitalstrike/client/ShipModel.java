@@ -66,26 +66,35 @@ public final class ShipModel {
         // ---- मीनारें
         spire(ps, buf, 0, 7.5F, 2, K, Q, A);
         spire(ps, buf, 0, 7.5F, -15, K, Q, A);
-        // ---- सबसे आगे बड़ा एलियन चेहरा
-        b(ps, buf, K, -5, -5, 12, 10, 12, 8);
-        b(ps, buf, K, -5.4F, 3, 19.4F, 10.8F, 1.2F, 1.0F);                 // भौंहें
-        b(ps, buf, W, -3.9F, 1.5F, 20.0F, 2.7F, 1.3F, 0.3F);               // आँखें
-        b(ps, buf, W, 1.2F, 1.5F, 20.0F, 2.7F, 1.3F, 0.3F);
-        for (int i = -4; i < 4; i++) {                                     // दाँत
-            b(ps, buf, (i & 1) == 0 ? W : G, i + 0.1F, (i & 1) == 0 ? -2.8F : -2.4F, 20.0F, 0.8F, 0.9F, 0.3F);
+        // ---- सबसे आगे बड़ा एलियन चेहरा (जहाज़ से ऊँचा)
+        b(ps, buf, K, -6, -6, 12, 12, 15, 9);                              // सिर
+        b(ps, buf, K, -6.4F, 4.6F, 20.6F, 12.8F, 1.3F, 0.8F);              // भौंहें
+        b(ps, buf, W, -4.6F, 2.8F, 21.0F, 3.4F, 1.5F, 0.35F);              // चमकती आँखें
+        b(ps, buf, W, 1.2F, 2.8F, 21.0F, 3.4F, 1.5F, 0.35F);
+        b(ps, buf, K, -1.0F, 0.2F, 21.0F, 2.0F, 2.4F, 0.6F);               // नाक
+        for (int i = -5; i < 5; i++) {                                     // दाँत / मुँह
+            b(ps, buf, (i & 1) == 0 ? W : G, i + 0.1F, (i & 1) == 0 ? -2.2F : -1.8F, 21.0F, 0.8F, 0.9F, 0.3F);
         }
-        b(ps, buf, G, -5.25F, -1.2F, 17.5F, 0.4F, 2.2F, 2.2F);              // गाल
-        b(ps, buf, G, 4.85F, -1.2F, 17.5F, 0.4F, 2.2F, 2.2F);
-        b(ps, buf, A, -5.3F, 0.6F, 13.5F, 0.35F, 1.5F, 1.5F);
-        b(ps, buf, A, 4.95F, 0.6F, 13.5F, 0.35F, 1.5F, 1.5F);
-        b(ps, buf, K, -4, -5.8F, 13, 8, 0.8F, 6.5F);                       // ठोड़ी
-        b(ps, buf, P, -5.7F, 6.2F, 15, 1.3F, 1.3F, 1.3F);                  // सींग
-        b(ps, buf, A, -6.2F, 7.3F, 15.8F, 1.0F, 1.2F, 1.0F);
-        b(ps, buf, P, 4.4F, 6.2F, 15, 1.3F, 1.3F, 1.3F);
-        b(ps, buf, A, 5.2F, 7.3F, 15.8F, 1.0F, 1.2F, 1.0F);
-        b(ps, buf, G, -3, 7, 17, 1, 1, 1);
-        b(ps, buf, G, 2, 7, 17, 1, 1, 1);
-        b(ps, buf, G, -0.5F, 7, 18, 1, 1.4F, 1);
+        b(ps, buf, G, -6.3F, -1.5F, 18.0F, 0.5F, 3.0F, 2.6F);              // गाल
+        b(ps, buf, G, 5.8F, -1.5F, 18.0F, 0.5F, 3.0F, 2.6F);
+        b(ps, buf, A, -6.35F, 3.5F, 14.0F, 0.4F, 1.8F, 1.8F);              // किनारे की बैंगनी चमक
+        b(ps, buf, A, 5.95F, 3.5F, 14.0F, 0.4F, 1.8F, 1.8F);
+        b(ps, buf, A, -6.35F, 6.5F, 16.5F, 0.4F, 1.2F, 1.2F);
+        b(ps, buf, A, 5.95F, 6.5F, 16.5F, 0.4F, 1.2F, 1.2F);
+        // गर्दन पर सफ़ेद-ग्रे कॉलर (ज़िगज़ैग)
+        for (int i = -6; i < 6; i++) {
+            b(ps, buf, (i & 1) == 0 ? W : G, i, (i & 1) == 0 ? -7.2F : -6.6F, 19.6F, 1, 1.2F, 1.6F);
+        }
+        b(ps, buf, K, -5, -8.4F, 13, 10, 2.4F, 7);
+        // सिर के ऊपर नुकीले कांटे और सींग
+        for (int i = -5; i <= 4; i += 3) {
+            b(ps, buf, (i & 1) == 0 ? G : W, i, 9, 15 + (i & 1), 1.2F, 1.3F, 1.2F);
+            b(ps, buf, K, i + 0.2F, 10.3F, 15.3F + (i & 1), 0.8F, 0.9F, 0.8F);
+        }
+        b(ps, buf, P, -7.0F, 7.0F, 14.5F, 1.4F, 1.4F, 1.4F);
+        b(ps, buf, A, -7.6F, 8.2F, 15.2F, 1.1F, 1.3F, 1.1F);
+        b(ps, buf, P, 5.6F, 7.0F, 14.5F, 1.4F, 1.4F, 1.4F);
+        b(ps, buf, A, 6.5F, 8.2F, 15.2F, 1.1F, 1.3F, 1.1F);
         // ---- पीछे इंजन
         for (int s = -1; s <= 1; s++) {
             b(ps, buf, G, s * 3.2F - 1.1F, -3.2F, -23, 2.2F, 2.2F, 1);
@@ -119,8 +128,8 @@ public final class ShipModel {
         float yr = (float) Math.toRadians(yawDeg);
         FxDraw.begin(true);
         for (int s = -1; s <= 1; s += 2) {
-            Vec3 eye = origin.add(new Vec3(s * 2.55, 2.15, 20.4).scale(scale).yRot(yr));
-            FxDraw.billboard(ps, cam, eye, 2.2F * scale, FxDraw.fx("glow"), 1F, 1F, 1F, 0.9F, 0);
+            Vec3 eye = origin.add(new Vec3(s * 2.9, 3.55, 21.6).scale(scale).yRot(yr));
+            FxDraw.billboard(ps, cam, eye, 2.8F * scale, FxDraw.fx("glow"), 1F, 1F, 1F, 0.95F, 0);
         }
         float flick = 0.8F + 0.2F * (float) Math.sin(t * 0.7);
         for (float z : new float[]{2, -15}) {

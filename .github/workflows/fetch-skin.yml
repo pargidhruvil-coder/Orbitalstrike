@@ -1,0 +1,38 @@
+name: Fetch skin
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Skin texture URL
+        required: true
+      path:
+        description: Destination path in repo
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download skin
+        env:
+          SKIN_URL: ${{ inputs.url }}
+          SKIN_PATH: ${{ inputs.path }}
+        run: |
+          case "$SKIN_URL" in http://textures.minecraft.net/texture/*|https://textures.minecraft.net/texture/*) ;; *) echo "bad url"; exit 1;; esac
+          case "$SKIN_PATH" in src/main/resources/assets/orbitalstrike/textures/entity/*.png) ;; *) echo "bad path"; exit 1;; esac
+          curl -fsSL "$SKIN_URL" -o "$SKIN_PATH"
+          file "$SKIN_PATH"
+      - name: Commit
+        env:
+          SKIN_PATH: ${{ inputs.path }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$SKIN_PATH"
+          git commit -m "Update skin from textures.minecraft.net" || echo "no change"
+          git push

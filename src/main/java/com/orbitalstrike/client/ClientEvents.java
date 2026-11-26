@@ -44,6 +44,19 @@ public class ClientEvents {
         shake = Math.min(3.0F, shake + amount);
     }
 
+    private static float recoil = 0, prevRecoil = 0;
+
+    /** फ़ायर: रिकॉइल + शेक */
+    public static void kick() {
+        recoil = 1.0F;
+        prevRecoil = 1.0F;
+        addShake(1.2F);
+    }
+
+    public static float recoil(float pt) {
+        return Mth.lerp(pt, prevRecoil, recoil);
+    }
+
     public static void flash(float amount) {
         flash = Math.max(flash, amount);
         prevFlash = flash;
@@ -104,6 +117,9 @@ public class ClientEvents {
         LocalPlayer p = mc.player;
         prevBars = bars;
         prevFlash = flash;
+        prevRecoil = recoil;
+        recoil *= 0.7F;
+        if (recoil < 0.01F) recoil = 0;
         if (p == null) { lastDim = null; return; }
 
         RocketEntity rocket = launchingRocket(p);

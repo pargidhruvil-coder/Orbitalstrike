@@ -79,19 +79,31 @@ public class ClientFx {
 
         public float topY() { return PLANET_Y[Timeline.PLANETS - 1]; }
 
-        /** वज्र की ऊँचाई (टारगेट से) — NaN = नहीं दिख रहा */
-        public float vajraHeight(float partial) {
-            if (tl.vajraStart < 0) return Float.NaN;
+        /** एलियन शिप की जगह (null = नहीं दिख रहा) */
+        public Vec3 shipPos(float partial) {
+            if (tl.vajraStart < 0) return null;
             float t = time(partial);
-            if (t < tl.vajraStart || t > tl.impact) return Float.NaN;
-            float dropStart = tl.impact - 30;
-            if (t < dropStart) {
-                float p = (t - tl.vajraStart) / (dropStart - tl.vajraStart);
-                p = 1 - (1 - p) * (1 - p);
-                return Mth.lerp(p, 170, 55);
+            if (t < tl.vajraStart || t > tl.impact + 70) return null;
+            Vec3 hover = pos.add(0, topY() + 30, 0);
+            if (t > tl.impact + 20) {           // प्रहार के बाद शिप ऊपर निकल जाता है
+                float p = (t - tl.impact - 20) / 50F;
+                return hover.add(p * p * 60, p * p * 160, 0);
             }
-            float p = (t - dropStart) / 30F;
-            return Mth.lerp(p * p, 55, 0);
+            float p = Mth.clamp((t - tl.vajraStart) / 70F, 0, 1);
+            float e = 1 - (1 - p) * (1 - p) * (1 - p);
+            Vec3 from = pos.add(-260, 200, 120);
+            return from.lerp(hover, e).add(0, Math.sin(t * 0.08) * 0.6, 0);
+        }
+
+        /** तोप की चमक 0..1 */
+        public float shipGlow(float partial) {
+            float t = time(partial);
+            return Mth.clamp((t - (tl.impact - 120)) / 120F, 0, 1);
+        }
+
+        public float shipYaw(float partial) {
+            float t = time(partial);
+            return t < tl.vajraStart + 70 ? -65 : -65 + (t - tl.vajraStart - 70) * 0.15F;
         }
     }
 
@@ -181,21 +193,23 @@ public class ClientFx {
         }
         FxDraw.end();
 
-        // वज्र
-        float vh = fx.vajraHeight(pt);
-        if (!Float.isNaN(vh)) {
-            Vec3 vp = c.add(0, vh, 0);
-            FxDraw.begin(true);
-            FxDraw.billboard(ps, cam, vp, 14, GLOW, 1F, 0.85F, 0.4F, 0.9F, 0);
-            FxDraw.billboard(ps, cam, vp, 24, GLOW, 0.5F, 0.7F, 1F, 0.5F, 0);
-            FxDraw.end();
+        // एलियन शिप
+        Vec3 sp = fx.shipPos(pt);
+        if (sp != null) {
+            float glow = fx.shipGlow(pt);
             MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
             ps.pushPose();
             Vec3 cp = cam.getPosition();
-            ps.translate(vp.x - cp.x, vp.y - cp.y, vp.z - cp.z);
-            FxDraw.vajra(ps, buf, 3.2F, t * 4F);
+            ps.translate(sp.x - cp.x, sp.y - cp.y, sp.z - cp.z);
+            ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(fx.shipYaw(pt)));
+            ShipModel.render(ps, buf, 3.0F, 0, glow, ((int) (t / 8)) % 2 == 0);
             ps.popPose();
             buf.endBatch();
+            FxDraw.begin(true);
+            Vec3 gun = sp.add(0, -11, 0);
+            FxDraw.billboard(ps, cam, gun, 2 + glow * 16, GLOW, 0.7F, 0.4F, 1F, 0.3F + glow * 0.7F, 0);
+            FxDraw.billboard(ps, cam, gun, 1 + glow * 6, GLOW, 1F, 1F, 1F, glow, 0);
+            FxDraw.end();
         }
 
         // ऑर्बिटल बीम
@@ -204,7 +218,8 @@ public class ClientFx {
         if (beamIn > 0 && beamOut > 0) {
             float a = beamIn * beamOut;
             float pulse = 1 + 0.15F * Mth.sin(t * 1.3F);
-            float h = (float) (topY - c.y) + 10;
+            Vec3 shipNow = fx.shipPos(pt);
+            float h = shipNow != null ? (float) (shipNow.y - 11 - c.y) : (float) (topY - c.y) + 10;
             float rr = t < tl.impact ? 0.4F + beamIn * 1.2F : 6F * pulse;
             FxDraw.begin(true);
             FxDraw.cylinder(ps, cam, c, h, rr, BEAM, 1F, 1F, 1F, a, -t * 0.08F);

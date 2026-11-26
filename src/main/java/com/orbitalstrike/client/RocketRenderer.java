@@ -13,14 +13,14 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-/** रॉकेट को Minecraft ब्लॉकों से बनाकर दिखाता है (कोई अलग मॉडल फ़ाइल नहीं चाहिए) */
+/** स्पेस शटल: सफ़ेद ऑर्बिटर + नारंगी फ़्यूल टैंक + दो सफ़ेद बूस्टर (उड़ान में अलग होकर गिरते हैं) */
 public class RocketRenderer extends EntityRenderer<RocketEntity> {
     private final BlockRenderDispatcher blocks;
 
     public RocketRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.blocks = ctx.getBlockRenderDispatcher();
-        this.shadowRadius = 0.8F;
+        this.shadowRadius = 0.9F;
     }
 
     @Override
@@ -28,36 +28,47 @@ public class RocketRenderer extends EntityRenderer<RocketEntity> {
         ps.pushPose();
         ps.mulPose(Axis.YP.rotationDegrees(-yaw));
         int t = e.getLaunchTicks();
-        if (t > RocketEntity.COUNTDOWN - 30) {   // लॉन्च से ठीक पहले और उड़ान में हल्का कंपन
+        if (t > RocketEntity.COUNTDOWN - 30) {
             float s = t < RocketEntity.COUNTDOWN ? 0.02F : 0.04F;
             ps.translate((e.level().random.nextFloat() - 0.5F) * s, 0, (e.level().random.nextFloat() - 0.5F) * s);
         }
-        // इंजन
-        block(ps, buf, light, Blocks.POLISHED_BLACKSTONE, 0, 0, 0.9F, 0.6F);
-        block(ps, buf, light, Blocks.IRON_BLOCK, 0.6F, 0, 1.0F, 0.6F);
-        // बॉडी
-        block(ps, buf, light, Blocks.WHITE_CONCRETE, 1.2F, 0, 1.0F, 1.0F);
-        block(ps, buf, light, Blocks.LIGHT_BLUE_CONCRETE, 2.2F, 0, 1.0F, 0.6F);   // खिड़की की पट्टी
-        block(ps, buf, light, Blocks.WHITE_CONCRETE, 2.8F, 0, 1.0F, 1.0F);
-        block(ps, buf, light, Blocks.WHITE_CONCRETE, 3.8F, 0, 0.9F, 0.5F);
-        // नोक
-        block(ps, buf, light, Blocks.RED_CONCRETE, 4.3F, 0, 0.75F, 0.45F);
-        block(ps, buf, light, Blocks.RED_CONCRETE, 4.75F, 0, 0.5F, 0.4F);
-        block(ps, buf, light, Blocks.RED_CONCRETE, 5.15F, 0, 0.25F, 0.35F);
-        // फिन
-        for (int i = 0; i < 4; i++) {
-            ps.pushPose();
-            ps.mulPose(Axis.YP.rotationDegrees(i * 90 + 45));
-            ps.translate(0, 0, 0.65F);
-            box(ps, buf, light, Blocks.RED_CONCRETE, -0.08F, 0.0F, -0.2F, 0.16F, 1.4F, 0.5F);
-            ps.popPose();
+        // नारंगी बाहरी फ़्यूल टैंक (बीच में)
+        box(ps, buf, light, Blocks.ORANGE_CONCRETE, -0.45F, 0.3F, -0.45F, 0.9F, 3.9F, 0.9F);
+        box(ps, buf, light, Blocks.ORANGE_TERRACOTTA, -0.4F, 0.45F, -0.47F, 0.8F, 0.08F, 0.94F);
+        box(ps, buf, light, Blocks.ORANGE_CONCRETE, -0.35F, 4.2F, -0.35F, 0.7F, 0.45F, 0.7F);
+        box(ps, buf, light, Blocks.ORANGE_TERRACOTTA, -0.2F, 4.65F, -0.2F, 0.4F, 0.35F, 0.4F);
+        // ऑर्बिटर (आगे, +Z)
+        box(ps, buf, light, Blocks.WHITE_CONCRETE, -0.32F, 0.5F, 0.45F, 0.64F, 2.9F, 0.62F);
+        box(ps, buf, light, Blocks.BLACK_CONCRETE, -0.33F, 0.5F, 0.44F, 0.66F, 2.9F, 0.06F);
+        box(ps, buf, light, Blocks.BLACK_CONCRETE, -0.26F, 3.4F, 0.5F, 0.52F, 0.35F, 0.52F);
+        box(ps, buf, light, Blocks.BLACK_CONCRETE, -0.16F, 3.75F, 0.58F, 0.32F, 0.2F, 0.34F);
+        box(ps, buf, light, Blocks.GRAY_STAINED_GLASS, -0.22F, 3.15F, 1.05F, 0.44F, 0.22F, 0.04F);
+        box(ps, buf, light, Blocks.WHITE_CONCRETE, -1.1F, 0.55F, 0.55F, 2.2F, 0.08F, 0.45F);
+        box(ps, buf, light, Blocks.WHITE_CONCRETE, -0.8F, 0.55F, 0.55F, 1.6F, 0.08F, 0.8F);
+        box(ps, buf, light, Blocks.BLACK_CONCRETE, -1.12F, 0.5F, 0.55F, 2.24F, 0.05F, 0.45F);
+        box(ps, buf, light, Blocks.WHITE_CONCRETE, -0.04F, 0.5F, 1.05F, 0.08F, 0.9F, 0.5F);
+        for (int i = -1; i <= 1; i++) {
+            box(ps, buf, light, Blocks.POLISHED_BLACKSTONE, i * 0.2F - 0.08F, 0.28F, 0.7F, 0.16F, 0.22F, 0.16F);
+        }
+        // बूस्टर
+        int flightT = t - RocketEntity.COUNTDOWN;
+        if (flightT < 120) {
+            float sep = flightT > 60 ? (flightT - 60 + partial) : 0;
+            for (int s = -1; s <= 1; s += 2) {
+                ps.pushPose();
+                ps.translate(s * (0.78F + sep * 0.05F), -sep * sep * 0.03F, 0);
+                ps.mulPose(Axis.ZP.rotationDegrees(s * Math.min(sep * 1.5F, 40)));
+                box(ps, buf, light, Blocks.WHITE_CONCRETE, -0.22F, 0.15F, -0.22F, 0.44F, 3.7F, 0.44F);
+                box(ps, buf, light, Blocks.LIGHT_GRAY_CONCRETE, -0.23F, 1.2F, -0.23F, 0.46F, 0.06F, 0.46F);
+                box(ps, buf, light, Blocks.LIGHT_GRAY_CONCRETE, -0.23F, 2.6F, -0.23F, 0.46F, 0.06F, 0.46F);
+                box(ps, buf, light, Blocks.WHITE_CONCRETE, -0.15F, 3.85F, -0.15F, 0.3F, 0.3F, 0.3F);
+                box(ps, buf, light, Blocks.LIGHT_GRAY_CONCRETE, -0.07F, 4.15F, -0.07F, 0.14F, 0.18F, 0.14F);
+                box(ps, buf, light, Blocks.POLISHED_BLACKSTONE, -0.18F, -0.05F, -0.18F, 0.36F, 0.22F, 0.36F);
+                ps.popPose();
+            }
         }
         ps.popPose();
         super.render(e, yaw, partial, ps, buf, light);
-    }
-
-    private void block(PoseStack ps, MultiBufferSource buf, int light, Block b, float y, float yOff, float width, float height) {
-        box(ps, buf, light, b, -width / 2, y + yOff, -width / 2, width, height, width);
     }
 
     private void box(PoseStack ps, MultiBufferSource buf, int light, Block b, float x, float y, float z, float sx, float sy, float sz) {

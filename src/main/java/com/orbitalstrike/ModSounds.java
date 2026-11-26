@@ -26,6 +26,12 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> VAJRA = big("vajra");
     public static final RegistryObject<SoundEvent> FIZZLE = reg("fizzle");
     public static final RegistryObject<SoundEvent> DIVINE = big("divine");
+    public static final RegistryObject<SoundEvent> CHIRP = reg("chirp");
+    public static final RegistryObject<SoundEvent> DOOR = reg("door");
+    public static final RegistryObject<SoundEvent> BUTTON = reg("button");
+    public static final RegistryObject<SoundEvent> SHIP_CHARGE = big("ship_charge");
+    public static final RegistryObject<SoundEvent> SHIP_HUM = reg("ship_hum");
+    public static final RegistryObject<SoundEvent> WHOOSH = reg("whoosh");
 
     private static RegistryObject<SoundEvent> reg(String n) {
         return SOUNDS.register(n, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(OrbitalStrikeMod.MODID, n)));

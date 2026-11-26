@@ -24,8 +24,8 @@ public class Config {
                 .define("breakBlocks", true);
         CHARGE_SECONDS = b.comment("Seconds of right-click charging needed before the gun can fire")
                 .defineInRange("chargeSeconds", 2, 1, 10);
-        CRATER_RADIUS = b.comment("Crater radius in blocks (bowl shape)")
-                .defineInRange("craterRadius", 22, 4, 48);
+        CRATER_RADIUS = b.comment("Crater radius in blocks (bowl shape). The shockwave flattens trees up to 2x this. Big values can lag.")
+                .defineInRange("craterRadius", 40, 4, 96);
         IMPACT_DAMAGE = b.comment("Damage at the centre of the impact (falls off with distance)")
                 .defineInRange("impactDamage", 400.0D, 0.0D, 5000.0D);
         PROTECT_OWNER = b.comment("The shooter is immune to their own strike and protected during the cinematic")

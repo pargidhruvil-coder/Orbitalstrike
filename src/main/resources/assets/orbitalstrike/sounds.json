@@ -142,5 +142,61 @@
       }
     ],
     "subtitle": "subtitles.orbitalstrike.voice"
+  },
+  "chirp": {
+    "sounds": [
+      "orbitalstrike:chirp1",
+      "orbitalstrike:chirp2",
+      "orbitalstrike:chirp3",
+      "orbitalstrike:chirp4",
+      "orbitalstrike:chirp5",
+      "orbitalstrike:chirp6"
+    ],
+    "subtitle": "subtitles.orbitalstrike.chirp"
+  },
+  "door": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:door",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.door"
+  },
+  "button": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:button",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.button"
+  },
+  "ship_charge": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:ship_charge",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.ship_charge"
+  },
+  "ship_hum": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:ship_hum",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.ship_hum"
+  },
+  "whoosh": {
+    "sounds": [
+      {
+        "name": "orbitalstrike:whoosh",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.orbitalstrike.whoosh"
   }
 }

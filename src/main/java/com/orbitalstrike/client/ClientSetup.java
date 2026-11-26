@@ -20,6 +20,15 @@ public class ClientSetup {
     }
 
     @SubscribeEvent
+    public static void clientSetup(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent event) {
+        event.enqueueWork(() -> net.minecraft.client.renderer.item.ItemProperties.register(
+                com.orbitalstrike.ModItems.ORBITAL_CANNON.get(),
+                new ResourceLocation(OrbitalStrikeMod.MODID, "charge"),
+                (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack
+                        ? com.orbitalstrike.OrbitalCannonItem.chargeProgress(entity) : 0.0F));
+    }
+
+    @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.ROCKET.get(), RocketRenderer::new);
     }

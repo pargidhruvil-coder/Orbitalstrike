@@ -135,8 +135,10 @@ public class StrikeManager {
         RandomSource r = l.random;
         int t = s.age - s.tl.vajraStart;
         if (t == 0) {
-            l.playSound(null, s.pos.x, s.pos.y + 30, s.pos.z, ModSounds.DIVINE.get(), SoundSource.PLAYERS, 10.0F, 0.8F);
-            l.playSound(null, s.pos.x, s.pos.y + 30, s.pos.z, ModSounds.VAJRA.get(), SoundSource.PLAYERS, 8.0F, 0.7F);
+            l.playSound(null, s.pos.x, s.pos.y + 60, s.pos.z, ModSounds.VAJRA.get(), SoundSource.PLAYERS, 10.0F, 0.5F);
+        }
+        if (s.age == s.tl.impact - 120) {
+            l.playSound(null, s.pos.x, s.pos.y + 60, s.pos.z, ModSounds.SHIP_CHARGE.get(), SoundSource.PLAYERS, 12.0F, 1.0F);
         }
         for (int i = 0; i < 6; i++) {
             double a = r.nextDouble() * Math.PI * 2, d = 10 + r.nextDouble() * 35;
@@ -200,7 +202,26 @@ public class StrikeManager {
         }
 
         if (Config.BREAK_BLOCKS.get()) {
+            debris(l, BlockPos.containing(c), radius);
             CRATERS.add(new Crater(l, BlockPos.containing(c), radius));
+        }
+    }
+
+    /** उड़ता मलबा: सतह के ब्लॉक हवा में उछलते हैं और दूर जाकर गिरते हैं */
+    private static void debris(ServerLevel l, BlockPos c, int radius) {
+        RandomSource r = l.random;
+        int count = Math.min(140, 30 + radius * 2);
+        for (int i = 0; i < count; i++) {
+            double a = r.nextDouble() * Math.PI * 2, d = r.nextDouble() * radius * 0.8;
+            int x = c.getX() + (int) (Math.cos(a) * d), z = c.getZ() + (int) (Math.sin(a) * d);
+            BlockPos top = l.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(x, 0, z)).below();
+            BlockState st = l.getBlockState(top);
+            if (st.isAir() || st.getDestroySpeed(l, top) < 0 || !st.getFluidState().isEmpty() || l.getBlockEntity(top) != null) continue;
+            net.minecraft.world.entity.item.FallingBlockEntity fb = net.minecraft.world.entity.item.FallingBlockEntity.fall(l, top, st);
+            fb.dropItem = false;
+            double sp = 0.8 + r.nextDouble() * 1.6;
+            fb.setDeltaMovement(Math.cos(a) * sp, 1.0 + r.nextDouble() * 1.8, Math.sin(a) * sp);
+            fb.hurtMarked = true;
         }
     }
 
@@ -209,10 +230,12 @@ public class StrikeManager {
         Vec3 c = s.pos;
         int t = s.age - s.tl.impact;
         int radius = Config.CRATER_RADIUS.get();
-        double h = Math.min(t * 1.3, 55);
-        particles(l, ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, c.x, c.y + h * 0.5, c.z, 8, 2, h * 0.25, 2, 0.02);
-        double cap = 5 + t * 0.25;
-        particles(l, ParticleTypes.LARGE_SMOKE, c.x, c.y + h, c.z, 30, cap, 2, cap, 0.05);
+        double h = Math.min(t * 1.8, 90);
+        particles(l, ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, c.x, c.y + h * 0.5, c.z, 14, 3 + radius * 0.05, h * 0.25, 3 + radius * 0.05, 0.02);
+        double cap = 8 + t * 0.4 + radius * 0.2;
+        particles(l, ParticleTypes.LARGE_SMOKE, c.x, c.y + h, c.z, 50, cap, 3, cap, 0.05);
+        particles(l, ParticleTypes.CAMPFIRE_COSY_SMOKE, c.x, c.y + h - 4, c.z, 20, cap * 0.8, 4, cap * 0.8, 0.02);
+        if (t < 30) particles(l, ParticleTypes.EXPLOSION, c.x, c.y + 2, c.z, 6, radius * 0.7, 2, radius * 0.7, 0);
         particles(l, ParticleTypes.FLAME, c.x, c.y + 1, c.z, 20, radius * 0.6, 0.5, radius * 0.6, 0.03);
     }
 
@@ -242,47 +265,92 @@ public class StrikeManager {
         CRATERS.clear();
     }
 
-    // ---------------------------------------------------------------- गड्ढा (कई टिक में, ताकि लैग न हो)
+    // ---------------------------------------------------------------- गड्ढा + शॉकवेव से साफ़ ज़मीन (कई टिक में)
     private static class Crater {
         final ServerLevel level;
         final BlockPos center;
         final int r;
+        final int R2;       // शॉकवेव का दायरा
         int x;
+        boolean carving = true;
 
         Crater(ServerLevel level, BlockPos center, int r) {
-            this.level = level; this.center = center; this.r = r; this.x = -r - 2;
+            this.level = level; this.center = center; this.r = r; this.R2 = r * 2; this.x = -r - 3;
         }
 
         /** @return true जब पूरा हो जाए */
         boolean step() {
+            if (carving) {
+                carve(Math.max(1, 3000 / ((2 * r + 6) * (int) (r * 1.7 + 6))));
+                if (x > r + 3) { carving = false; x = -R2; }
+                return false;
+            }
+            flatten(Math.max(1, 6000 / ((2 * R2 + 1) * 40)));
+            return x > R2;
+        }
+
+        private void carve(int slices) {
             RandomSource rnd = level.random;
             BlockState[] scorch = {Blocks.BLACKSTONE.defaultBlockState(), Blocks.BASALT.defaultBlockState(),
-                    Blocks.MAGMA_BLOCK.defaultBlockState(), Blocks.OBSIDIAN.defaultBlockState(), Blocks.COAL_BLOCK.defaultBlockState()};
-            double ry = r * 0.6;
+                    Blocks.MAGMA_BLOCK.defaultBlockState(), Blocks.OBSIDIAN.defaultBlockState(), Blocks.COAL_BLOCK.defaultBlockState(),
+                    Blocks.MAGMA_BLOCK.defaultBlockState(), Blocks.CRYING_OBSIDIAN.defaultBlockState()};
+            double ry = r * 0.62;
             BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
-            for (int n = 0; n < 2 && x <= r + 2; n++, x++) {
-                for (int z = -r - 2; z <= r + 2; z++) {
-                    for (int y = (int) -ry - 2; y <= r; y++) {
+            for (int n = 0; n < slices && x <= r + 3; n++, x++) {
+                for (int z = -r - 3; z <= r + 3; z++) {
+                    for (int y = (int) -ry - 3; y <= r; y++) {
                         double nx = x / (double) r, nz = z / (double) r;
                         double ny = y < 0 ? y / ry : y / (double) r;
-                        double d = Math.sqrt(nx * nx + ny * ny + nz * nz) + (rnd.nextDouble() - 0.5) * 0.06;
+                        double d = Math.sqrt(nx * nx + ny * ny + nz * nz) + (rnd.nextDouble() - 0.5) * 0.07;
                         p.set(center.getX() + x, center.getY() + y, center.getZ() + z);
                         if (!level.isInWorldBounds(p)) continue;
                         BlockState st = level.getBlockState(p);
                         if (st.isAir() || st.getDestroySpeed(level, p) < 0) continue;
                         if (d < 1.0) {
                             level.setBlock(p, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
-                        } else if (d < 1.12 && y <= 1) {
-                            level.setBlock(p, scorch[rnd.nextInt(scorch.length)], Block.UPDATE_CLIENTS);
+                        } else if (d < 1.14 && y <= 1) {
+                            boolean bottom = y < -ry * 0.75;
+                            BlockState s2 = bottom && rnd.nextInt(5) == 0 ? Blocks.LAVA.defaultBlockState() : scorch[rnd.nextInt(scorch.length)];
+                            level.setBlock(p, s2, Block.UPDATE_CLIENTS);
                             BlockPos up = p.above();
-                            if (rnd.nextInt(6) == 0 && level.getBlockState(up).isAir()) {
+                            if (rnd.nextInt(5) == 0 && level.getBlockState(up).isAir()) {
                                 level.setBlock(up, BaseFireBlock.getState(level, up), Block.UPDATE_ALL);
                             }
                         }
                     }
                 }
             }
-            return x > r + 2;
+        }
+
+        private void flatten(int slices) {
+            RandomSource rnd = level.random;
+            BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+            for (int n = 0; n < slices && x <= R2; n++, x++) {
+                for (int z = -R2; z <= R2; z++) {
+                    double d = Math.sqrt(x * x + z * z);
+                    if (d <= r + 2 || d > R2) continue;
+                    double strength = 1.0 - (d - r) / (R2 - r);
+                    for (int y = 34; y >= -4; y--) {
+                        p.set(center.getX() + x, center.getY() + y, center.getZ() + z);
+                        if (!level.isInWorldBounds(p)) continue;
+                        BlockState st = level.getBlockState(p);
+                        if (st.isAir()) continue;
+                        if (st.is(net.minecraft.tags.BlockTags.LEAVES) || st.is(net.minecraft.tags.BlockTags.LOGS)
+                                || st.is(net.minecraft.tags.BlockTags.FLOWERS) || st.is(net.minecraft.tags.BlockTags.REPLACEABLE)
+                                || st.is(Blocks.SNOW) || st.is(Blocks.SNOW_BLOCK)) {
+                            if (st.getFluidState().isEmpty()) {
+                                level.setBlock(p, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+                            }
+                        } else if (st.is(Blocks.GRASS_BLOCK) || st.is(Blocks.PODZOL) || st.is(Blocks.MYCELIUM)) {
+                            BlockState burnt = rnd.nextDouble() < strength ? Blocks.COARSE_DIRT.defaultBlockState() : Blocks.DIRT.defaultBlockState();
+                            level.setBlock(p, burnt, Block.UPDATE_CLIENTS);
+                            if (rnd.nextDouble() < strength * 0.15 && level.getBlockState(p.above()).isAir()) {
+                                level.setBlock(p.above(), BaseFireBlock.getState(level, p.above()), Block.UPDATE_ALL);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

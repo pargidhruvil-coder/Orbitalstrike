@@ -126,7 +126,7 @@ public class OrbitalCannonItem extends Item {
         Vec3 look = player.getLookAngle();
         player.push(-look.x * 0.6, 0.12, -look.z * 0.6);
         if (level.isClientSide) {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.orbitalstrike.client.ClientEvents.addShake(1.2F));
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.orbitalstrike.client.ClientEvents.kick());
             return;
         }
 
@@ -182,5 +182,10 @@ public class OrbitalCannonItem extends Item {
     @Override
     public boolean isFoil(ItemStack stack) {
         return false;
+    }
+
+    @Override
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
+        consumer.accept(com.orbitalstrike.client.CannonClientExtensions.INSTANCE);
     }
 }

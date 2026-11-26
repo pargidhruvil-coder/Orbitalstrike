@@ -266,8 +266,7 @@ def p_indra(d):
     d.line([(28, 2), (25, 9), (29, 9), (25, 17)], fill=(150, 220, 255, 255), width=1)  # lightning
     d.line([(4, 3), (2, 8)], fill=(150, 220, 255, 255))
 
-for n, f in (("vikram", p_vikram), ("chintu", p_chintu), ("system", p_system), ("voice", p_voice), ("indra", p_indra)):
-    portrait(n, f)
+# (old portraits removed in v4)
 
 # Keypad panel background
 def make_keypad():

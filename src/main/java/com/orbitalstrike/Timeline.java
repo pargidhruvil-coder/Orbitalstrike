@@ -10,7 +10,7 @@ public final class Timeline {
     public final int planetStep;     // हर ग्रह के बीच का अंतर
     public final int planetFly;      // एक ग्रह को उड़कर आने में
     public final int alignedAt;      // "नवग्रह संरेखित"
-    public final int vajraStart;     // इंद्र + वज्र (-1 = नहीं)
+    public final int vajraStart;     // एलियन शिप आता है और तोप चार्ज करता है (-1 = नहीं)
     public final int impact;         // प्रहार
     public final int end;            // सिनेमैटिक खत्म
 
@@ -27,11 +27,15 @@ public final class Timeline {
 
     public static Timeline of(int mode) {
         return switch (mode) {
-            case LONG -> new Timeline(LONG, 780, 22, 30, 1060, 1260, 1440);
+            case LONG -> new Timeline(LONG, 800, 22, 30, 1040, 1240, 1420);
             case MEDIUM -> new Timeline(MEDIUM, 0, 10, 24, 140, 270, 410);
             default -> new Timeline(SHORT, 0, 4, 22, -1, 80, 150);
         };
     }
+
+    /** लंबे मोड के सीन: अंतरिक्ष -> शिप की ओर उड़ान -> शिप के अंदर */
+    public static final int APPROACH_START = 110;
+    public static final int INTERIOR_START = 250;
 
     public int planetArrive(int i) {
         return planetsStart + i * planetStep + planetFly;

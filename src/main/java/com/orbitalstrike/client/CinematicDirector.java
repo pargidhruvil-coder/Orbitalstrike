@@ -134,8 +134,8 @@ public class CinematicDirector {
             lines.add(new Line(692, 45, "zara", za, "z7"));
             lines.add(new Line(742, 55, "zoro", zo, "z8"));
             lines.add(new Line(802, 50, "zara", za, "z8b"));
-            lines.add(new Line(tl.vajraStart + 20, 70, "vip", ChatFormatting.LIGHT_PURPLE, "z9"));
-            lines.add(new Line(tl.impact - 45, 45, "vip", ChatFormatting.LIGHT_PURPLE, "z10"));
+            lines.add(new Line(tl.vajraStart + 20, 70, "vip", ChatFormatting.WHITE, "z9"));
+            lines.add(new Line(tl.impact - 45, 45, "vip", ChatFormatting.WHITE, "z10"));
 
             Vec3 zoroHead = ZORO_POS.add(0, 1.75, 0), zaraHead = ZARA_POS.add(0, 1.75, 0);
             shots.add(new Shot(250, v(0, 1.8, 3.6), v(0, 1.7, 2.5), v(0, 1.3, -3), v(0, 1.4, -3)));
@@ -148,8 +148,8 @@ public class CinematicDirector {
             shots.add(new Shot(690, v(-1.4, 1.7, 1.7), v(-1.4, 1.7, 1.4), v(-1.4, 1.75, -0.4), v(-1.4, 1.75, -0.4)));
             shots.add(new Shot(735, v(0, 0.9, 1.6), v(0, 0.95, 1.3), v(0, 1.9, -0.8), v(0, 1.95, -0.8)));
         } else if (tl.mode == Timeline.MEDIUM) {
-            lines.add(new Line(tl.vajraStart + 5, 55, "vip", ChatFormatting.LIGHT_PURPLE, "z9"));
-            lines.add(new Line(tl.impact - 45, 45, "vip", ChatFormatting.LIGHT_PURPLE, "z10"));
+            lines.add(new Line(tl.vajraStart + 5, 55, "vip", ChatFormatting.WHITE, "z9"));
+            lines.add(new Line(tl.impact - 45, 45, "vip", ChatFormatting.WHITE, "z10"));
         }
         lines.add(new Line(tl.impact + 72, Math.max(40, tl.end - tl.impact - 75), "player", ChatFormatting.WHITE, "l" + ending));
     }
@@ -833,15 +833,16 @@ public class CinematicDirector {
         int boxW = Math.min(w - 40, 380);
         int boxH = 52, x0 = (w - boxW) / 2, x1 = x0 + boxW, y1 = h - bar - 6, y0 = y1 - boxH;
         g.fill(x0, y0, x1, y1, 0xC0000000);
-        g.fill(x0, y0, x1, y0 + 1, l.speaker.equals("vip") ? 0xFFC060FF : l.speaker.equals("zara") ? 0xFFFFA030 : l.speaker.equals("zoro") ? 0xFF80FF60 : 0xFFFFFFFF);
+        g.fill(x0, y0, x1, y0 + 1, l.speaker.equals("vip") ? 0xFFFFFFFF : l.speaker.equals("zara") ? 0xFFFFA030 : l.speaker.equals("zoro") ? 0xFF80FF60 : 0xFFFFFFFF);
         int px = x0 + 6, py = y0 + 6, ps = 40;
         if (l.speaker.equals("player")) {
             if (mc.player != null) PlayerFaceRenderer.draw(g, mc.player.getSkinTextureLocation(), px, py, ps);
         } else {
-            ResourceLocation skin = l.speaker.equals("vip") ? AlienRenderer.ZARA : l.speaker.equals("zara") ? AlienRenderer.ZAMZAM : AlienRenderer.ZORO;
+            ResourceLocation skin = l.speaker.equals("vip") ? AlienRenderer.HEROBRINE : l.speaker.equals("zara") ? AlienRenderer.ZAMZAM : AlienRenderer.ZORO;
             g.blit(skin, px, py, ps, ps, 8, 8, 8, 8, 64, 64);
             RenderSystem.enableBlend();
             g.blit(skin, px, py, ps, ps, 40, 8, 8, 8, 64, 64);     // ऊपरी परत (हैट) भी, जैसे गेम में दिखता है
+            if (l.speaker.equals("vip")) g.blit(AlienRenderer.HEROBRINE_EYES, px, py, ps, ps, 8, 8, 8, 8, 64, 64);   // सफ़ेद आँखें
             RenderSystem.disableBlend();
         }
         Component name = Component.translatable("speaker.orbitalstrike." + l.speaker).withStyle(l.color, ChatFormatting.BOLD);

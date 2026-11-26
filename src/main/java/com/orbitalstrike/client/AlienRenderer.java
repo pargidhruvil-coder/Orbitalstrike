@@ -22,6 +22,9 @@ public final class AlienRenderer {
     public static final ResourceLocation ZARA = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zara.png");
     /** VIP Dhruvil की आँखें (सिर्फ़ आँख वाले पिक्सेल) — Enderman जैसी चमक के लिए */
     public static final ResourceLocation ZARA_EYES = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zara_eyes.png");
+    /** Herobrine: गेम की अपनी Steve स्किन + सफ़ेद चमकती आँखें (कोई स्किन फ़ाइल कॉपी नहीं) */
+    public static final ResourceLocation HEROBRINE = new ResourceLocation("minecraft", "textures/entity/player/wide/steve.png");
+    public static final ResourceLocation HEROBRINE_EYES = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/herobrine_eyes.png");
     /** शिप के अंदर वाले दोनों एलियन: ज़ोरो (हरी आँखें) और ज़मज़म (नारंगी आँखें) */
     public static final ResourceLocation ZAMZAM = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zamzam.png");
     private static final ResourceLocation ZORO_EYES = new ResourceLocation(OrbitalStrikeMod.MODID, "textures/entity/alien_zoro_eyes.png");
@@ -29,6 +32,7 @@ public final class AlienRenderer {
 
     private static ResourceLocation eyesFor(ResourceLocation tex) {
         if (tex.equals(ZARA)) return ZARA_EYES;
+        if (tex.equals(HEROBRINE)) return HEROBRINE_EYES;
         if (tex.equals(ZORO)) return ZORO_EYES;
         if (tex.equals(ZAMZAM)) return ZAMZAM_EYES;
         return null;

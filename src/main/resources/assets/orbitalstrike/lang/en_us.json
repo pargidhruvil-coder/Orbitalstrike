@@ -51,7 +51,7 @@
   "cinematic.orbitalstrike.code": "EMERGENCY CODE",
   "cinematic.orbitalstrike.access": "ACCESS GRANTED",
   "cinematic.orbitalstrike.aligned": "✦ NAVAGRAHA ALIGNED ✦",
-  "cinematic.orbitalstrike.strike": "⚡ VIP DHRUVIL SMASH!!! ⚡",
+  "cinematic.orbitalstrike.strike": "⚡ HEROBRINE SMASH!!! ⚡",
   "cinematic.orbitalstrike.skip": "[Space] skip",
   "planet.orbitalstrike.chandra": "☾ CHANDRA - MOON",
   "planet.orbitalstrike.mangal": "♂ MANGAL - MARS",
@@ -90,8 +90,8 @@
   "dialog.orbitalstrike.z6": "Alignment code... nine... two... seven... four...",
   "dialog.orbitalstrike.z7": "Code accepted! All nine planets are moving!",
   "dialog.orbitalstrike.z8": "FOR THE GALAXYYY!",
-  "dialog.orbitalstrike.z9": "Enough! I'll smash it MYSELF!",
-  "dialog.orbitalstrike.z10": "VIP DHRUVIL... SMAAAASH!!!",
+  "dialog.orbitalstrike.z9": "You called the planets... now face ME!",
+  "dialog.orbitalstrike.z10": "HEROBRINE... SMAAAASH!!!",
   "speaker.orbitalstrike.zoro": "ZORO",
   "speaker.orbitalstrike.zara": "ZAMZAM",
   "subtitles.orbitalstrike.chirp": "Alien chatter",
@@ -104,5 +104,5 @@
   "dialog.orbitalstrike.z8b": "Main cannon locked on Earth... FIRE!",
   "cinematic.orbitalstrike.planet_aligned": "✦ ALIGNED ✦",
   "cinematic.orbitalstrike.lockon": "⚠ TARGET: EARTH ⚠",
-  "speaker.orbitalstrike.vip": "VIP DHRUVIL"
+  "speaker.orbitalstrike.vip": "HEROBRINE"
 }

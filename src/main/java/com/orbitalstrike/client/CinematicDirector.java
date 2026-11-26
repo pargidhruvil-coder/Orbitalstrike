@@ -68,6 +68,7 @@ public class CinematicDirector {
     private int lastAge = -1;
     private int lastChars = -1;
     private Line lastLine = null;
+    private float lastVoiceT = -100;
     private final int ending;
     private Vec3 sceneCam = Vec3.ZERO, sceneCamO = Vec3.ZERO;
 
@@ -96,8 +97,10 @@ public class CinematicDirector {
             mc.setCameraEntity(mc.player);
             mc.player.setXRot(d.playerPitch);
             mc.player.xRotO = d.playerPitch;
-            mc.player.yHeadRot = mc.player.getYRot();
-            mc.player.yHeadRotO = mc.player.yHeadRot;
+            mc.player.setYRot(d.playerYaw);
+            mc.player.yRotO = d.playerYaw;
+            mc.player.yHeadRot = d.playerYaw;
+            mc.player.yHeadRotO = d.playerYaw;
         }
         mc.options.setCameraType(d.savedType);
         if (mc.screen instanceof CinematicScreen) mc.setScreen(null);
@@ -203,8 +206,12 @@ public class CinematicDirector {
             float sway = talking ? Mth.sin(e * 0.13F) * 22 + Mth.sin(e * 0.31F) * 6 : 0;
             mc.player.xRotO = mc.player.getXRot();
             mc.player.setXRot(-4 + nod);
+            mc.player.yRotO = mc.player.getYRot();
+            mc.player.setYRot(playerYaw + sway * 0.7F);
             mc.player.yHeadRotO = mc.player.yHeadRot;
             mc.player.yHeadRot = playerYaw + sway;
+            mc.player.yBodyRotO = mc.player.yBodyRot;
+            mc.player.yBodyRot = playerYaw + sway * 0.3F;
         }
         for (int t = Math.max(lastAge + 1, a - 1); t <= a; t++) sounds(t);
         lastAge = a;
@@ -238,10 +245,35 @@ public class CinematicDirector {
                 ClientEvents.addShake(1.6F);
             }
         }
+        if (t == 2 && tl.mode != Timeline.LONG) play(ModSounds.WHOOSH.get(), 0.7F, 1F);
         for (int i = 0; i < Timeline.PLANETS; i++) {
-            if (t == tl.planetArrive(i)) play(ModSounds.LOCK.get(), 0.8F + i * 0.05F, 0.5F);
+            if (t == tl.planetArrive(i)) {
+                play(ModSounds.ALIGN.get(), 0.7F + i * 0.08F, 0.9F);
+                play(ModSounds.LOCK.get(), 0.8F + i * 0.05F, 0.5F);
+            }
+        }
+        if (t == tl.alignedAt) play(ModSounds.DIVINE.get(), 1.2F, 1F);
+        if (tl.vajraStart >= 0) {
+            if (t == tl.vajraStart) {                           // Herobrine आता है
+                play(SoundEvents.LIGHTNING_BOLT_THUNDER, 0.7F, 1F);
+                play(SoundEvents.WARDEN_EMERGE, 0.7F, 1F);
+            }
+            if (t == tl.vajraStart + 30) play(SoundEvents.LIGHTNING_BOLT_THUNDER, 0.9F, 0.8F);
+            if (t == tl.impact - 70) {                          // दहाड़!
+                play(SoundEvents.RAVAGER_ROAR, 0.5F, 1F);
+                play(SoundEvents.ENDER_DRAGON_GROWL, 0.6F, 1F);
+                play(SoundEvents.WARDEN_ROAR, 0.7F, 1F);
+            }
+            if (t == tl.impact - 50) play(SoundEvents.ENDER_DRAGON_GROWL, 0.5F, 0.8F);
         }
         if (t == tl.impact - 30) play(SoundEvents.LIGHTNING_BOLT_THUNDER, 0.8F, 1F);
+        if (t == tl.impact - 25) play(ModSounds.BEAM.get(), 1F, 1F);
+        if (t == tl.impact) {
+            play(ModSounds.IMPACT.get(), 1F, 1F);
+            play(SoundEvents.GENERIC_EXPLODE, 0.5F, 1F);
+            play(SoundEvents.WARDEN_SONIC_BOOM, 0.6F, 1F);
+        }
+        if (t == tl.impact + 12) play(SoundEvents.GENERIC_EXPLODE, 0.4F, 0.8F);
     }
 
     private static void play(SoundEvent s, float pitch, float vol) {
@@ -399,7 +431,27 @@ public class CinematicDirector {
         sceneCam = sc;
     }
 
+    /** कैमरा कभी ज़मीन/पत्थर के अंदर न जाए */
+    private static Vec3 aboveGround(Vec3 p) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return p;
+        int h = mc.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(p.x), Mth.floor(p.z));
+        if (h > mc.level.getMinBuildHeight() + 1 && p.y < h + 2.5) return new Vec3(p.x, h + 2.5, p.z);
+        return p;
+    }
+
     private void setCam(Vec3 pos, float yaw, float pitch, boolean cut) {
+        if (lastPhase != null && lastPhase.ordinal() >= Phase.PLANETS.ordinal() && lastPhase != Phase.END) {
+            Vec3 safe = aboveGround(pos);
+            if (safe != pos) {
+                // ऊपर उठाने के बाद भी उसी चीज़ को देखो
+                Vec3 lookDir = Vec3.directionFromRotation(pitch, yaw);
+                Vec3 target = pos.add(lookDir.scale(40));
+                pos = safe;
+                yaw = yawTo(pos, target);
+                pitch = pitchTo(pos, target);
+            }
+        }
         if (cut) {
             cam.setPos(pos);
             cam.xo = pos.x; cam.yo = pos.y; cam.zo = pos.z;
@@ -502,15 +554,15 @@ public class CinematicDirector {
         RenderSystem.clear(256, Minecraft.ON_OSX);
         RenderSystem.enableDepthTest();
         MultiBufferSource.BufferSource buf = Minecraft.getInstance().renderBuffers().bufferSource();
-        Vec3 shipLocal = new Vec3(0, 2, 34);
+        Vec3 shipLocal = new Vec3(0, 4, 30);
         ps.pushPose();
         ps.translate(shipLocal.x, shipLocal.y, shipLocal.z);
         ps.mulPose(Axis.YP.rotationDegrees(90));
         float glow = Mth.clamp((o - 12) / 28F, 0, 1);
-        ShipModel.render(ps, buf, 3.0F, 0, glow, ((int) (t / 8)) % 2 == 0);
+        ShipModel.render(ps, buf, 1.0F, 0, glow, ((int) (t / 8)) % 2 == 0);
         ps.popPose();
         buf.endBatch();
-        Vec3 gun = c.add(shipLocal).add(ShipModel.cannonWorld(Vec3.ZERO, 90, 3.0F));
+        Vec3 gun = c.add(shipLocal).add(ShipModel.cannonWorld(Vec3.ZERO, 90, 1.0F));
         FxDraw.begin(true);
         FxDraw.billboard(ps, camera, gun, 2 + glow * 10, FxDraw.fx("glow"), 0.75F, 0.4F, 1F, 0.4F + glow * 0.6F, 0);
         if (o >= 40) {        // बीम: तोप से पृथ्वी तक
@@ -869,20 +921,27 @@ public class CinematicDirector {
         String full = I18n.get("dialog.orbitalstrike." + l.key);
         int chars = Math.min(full.length(), (int) ((t - l.start) * 1.6F));
         if (l != lastLine) { lastLine = l; lastChars = -1; }
-        if (chars > lastChars) {
+        if (chars < full.length() && chars > 0) {
+            Minecraft mcv = Minecraft.getInstance();
             boolean alien = l.speaker.equals("zoro") || l.speaker.equals("zara") || l.speaker.equals("vip");
-            if (chars < full.length() && (alien ? chars % 3 == 0 : chars % 2 == 0)) {
-                if (alien) {
-                    float base = l.speaker.equals("zara") ? 1.3F : l.speaker.equals("vip") ? 0.6F : 0.8F;
-                    play(ModSounds.CHIRP.get(), base + mc.level.random.nextFloat() * 0.25F, 0.8F);
-                } else if (l.speaker.equals("player")) {
-                    if (chars % 4 == 0) play(SoundEvents.VILLAGER_AMBIENT, 0.85F + mc.level.random.nextFloat() * 0.35F, 0.8F);
+            boolean player = l.speaker.equals("player");
+            float gap = player ? 5 : alien ? 3 : 2;
+            if (t - lastVoiceT >= gap) {
+                lastVoiceT = t;
+                float rnd = mcv.level.random.nextFloat();
+                if (player) {
+                    play(SoundEvents.VILLAGER_AMBIENT, 0.85F + rnd * 0.35F, 0.9F);
+                } else if (l.speaker.equals("vip")) {
+                    play(SoundEvents.WARDEN_AMBIENT, 0.8F + rnd * 0.3F, 0.8F);
+                } else if (alien) {
+                    float base = l.speaker.equals("zara") ? 1.3F : 0.8F;
+                    play(ModSounds.CHIRP.get(), base + rnd * 0.25F, 0.9F);
                 } else {
                     play(ModSounds.BLIP.get(), 1.0F, 0.5F);
                 }
             }
-            lastChars = chars;
         }
+        lastChars = chars;
         List<FormattedCharSequence> rows = font.split(Component.literal(full.substring(0, chars)), x1 - (px + ps + 8) - 8);
         int ty = py + 12;
         for (int i = 0; i < Math.min(3, rows.size()); i++) {

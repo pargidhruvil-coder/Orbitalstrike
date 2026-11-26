@@ -2,7 +2,11 @@ name: Build mod jar
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -17,7 +21,19 @@ jobs:
         with:
           gradle-version: 8.1.1
       - run: gradle build --no-daemon
+      - name: Prepare jar
+        run: |
+          JAR=$(ls build/libs/*.jar | grep -v sources | head -1)
+          cp "$JAR" orbitalstrike.jar
+          ls -la orbitalstrike.jar
       - uses: actions/upload-artifact@v4
         with:
           name: orbitalstrike-jar
           path: build/libs/*.jar
+      - name: Publish to the "latest" release (direct download link)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || gh release create latest --title "Latest build" --notes "Download orbitalstrike.jar and put it in your mods folder (Forge 1.20.1)."
+          gh release upload latest orbitalstrike.jar --clobber
+          gh release edit latest --notes "Latest build from commit ${GITHUB_SHA::7}. Download orbitalstrike.jar and put it in your mods folder (Forge 1.20.1)."

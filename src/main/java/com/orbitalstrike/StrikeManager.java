@@ -203,7 +203,7 @@ public class StrikeManager {
 
         if (Config.BREAK_BLOCKS.get()) {
             debris(l, BlockPos.containing(c), radius);
-            CRATERS.add(new Crater(l, BlockPos.containing(c), radius));
+            CRATERS.add(new Crater(l, BlockPos.containing(c), radius, Config.CRATER_DEPTH.get()));
         }
     }
 
@@ -271,17 +271,18 @@ public class StrikeManager {
         final BlockPos center;
         final int r;
         final int R2;       // शॉकवेव का दायरा
+        final int depth;    // नीचे कितना गहरा
         int x;
         boolean carving = true;
 
-        Crater(ServerLevel level, BlockPos center, int r) {
-            this.level = level; this.center = center; this.r = r; this.R2 = r * 2; this.x = -r - 3;
+        Crater(ServerLevel level, BlockPos center, int r, int depth) {
+            this.level = level; this.center = center; this.r = r; this.R2 = r * 2; this.depth = depth; this.x = -r - 3;
         }
 
         /** @return true जब पूरा हो जाए */
         boolean step() {
             if (carving) {
-                carve(Math.max(1, 3000 / ((2 * r + 6) * (int) (r * 1.7 + 6))));
+                carve(Math.max(1, 3000 / ((2 * r + 6) * (depth + r + 6))));
                 if (x > r + 3) { carving = false; x = -R2; }
                 return false;
             }
@@ -294,7 +295,7 @@ public class StrikeManager {
             BlockState[] scorch = {Blocks.BLACKSTONE.defaultBlockState(), Blocks.BASALT.defaultBlockState(),
                     Blocks.MAGMA_BLOCK.defaultBlockState(), Blocks.OBSIDIAN.defaultBlockState(), Blocks.COAL_BLOCK.defaultBlockState(),
                     Blocks.MAGMA_BLOCK.defaultBlockState(), Blocks.CRYING_OBSIDIAN.defaultBlockState()};
-            double ry = r * 0.62;
+            double ry = depth;
             BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
             for (int n = 0; n < slices && x <= r + 3; n++, x++) {
                 for (int z = -r - 3; z <= r + 3; z++) {

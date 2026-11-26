@@ -212,17 +212,18 @@ public class ClientFx {
         float dt = Math.max(0, t - tl.impact);
         float fade = Mth.clamp(1 - (dt - 45) / 25F, 0, 1);
         if (fade <= 0) return;
+        float us = Math.max(1F, com.orbitalstrike.Config.CRATER_RADIUS.get() / 40F);
         for (int k = 0; k <= 7; k++) {
-            float r = k * 2.1F;
+            float r = k * 2.1F * us;
             int n = Math.max(1, k * 7);
             for (int j = 0; j < n; j++) {
                 double a = j * Math.PI * 2 / n + k * 0.4;
-                float h = (float) (rise * 14 * Math.pow(1 - r / 17.0, 1.4));
+                float h = (float) (rise * 14 * us * Math.pow(1 - r / (17.0 * us), 1.4));
                 double ang = a + dt * 0.12 * (1 + k * 0.15);
                 double rad = r + dt * (0.25 + k * 0.05);
                 double y = fx.pos.y + h - 1 + dt * (1.4 + (7 - k) * 0.25) + Math.sin(dt * 0.2 + j) * 0.5 * Math.min(1, dt / 10);
                 Vec3 p = new Vec3(fx.pos.x + Math.cos(ang) * rad, y, fx.pos.z + Math.sin(ang) * rad);
-                float sc = 1.6F * fade;
+                float sc = 1.6F * us * fade;
                 ps.pushPose();
                 ps.translate(p.x - cp.x, p.y - cp.y, p.z - cp.z);
                 if (dt > 0) {
@@ -247,7 +248,7 @@ public class ClientFx {
         float lift = Mth.clamp((t - liftStart) / (tl.impact - liftStart), 0, 1);
         lift = lift * lift * (3 - 2 * lift);
         for (int k = 0; k < 70; k++) {
-            double a = r.nextDouble() * Math.PI * 2, rad = 5 + r.nextDouble() * 34;
+            double a = r.nextDouble() * Math.PI * 2, rad = 5 + r.nextDouble() * com.orbitalstrike.Config.CRATER_RADIUS.get() * 0.8;
             float size = 0.8F + r.nextFloat() * 2.0F, rise = 5 + r.nextFloat() * 22, spin = 1 + r.nextFloat() * 4;
             net.minecraft.world.level.block.Block b = DEBRIS[r.nextInt(DEBRIS.length)];
             float delay = r.nextFloat() * 0.4F;
@@ -406,10 +407,11 @@ public class ClientFx {
         if (sw >= 0 && sw < 40) {
             float p = sw / 40F;
             FxDraw.begin(true);
-            FxDraw.flat(ps, cam, c.add(0, 0.5, 0), 8 + p * 110, RING, 1F, 0.85F, 0.6F, 1 - p, 0);
+            float crR = com.orbitalstrike.Config.CRATER_RADIUS.get();
+            FxDraw.flat(ps, cam, c.add(0, 0.5, 0), 8 + p * crR * 2.8F, RING, 1F, 0.85F, 0.6F, 1 - p, 0);
             if (sw > 6) {
                 float p2 = (sw - 6) / 34F;
-                FxDraw.flat(ps, cam, c.add(0, 1.5, 0), 4 + p2 * 70, RING, 0.6F, 0.6F, 1F, (1 - p2) * 0.8F, 30);
+                FxDraw.flat(ps, cam, c.add(0, 1.5, 0), 4 + p2 * crR * 1.8F, RING, 0.6F, 0.6F, 1F, (1 - p2) * 0.8F, 30);
             }
             FxDraw.end();
         }

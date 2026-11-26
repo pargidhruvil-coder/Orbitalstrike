@@ -20,7 +20,7 @@
    - मलबा उड़ता है और बड़ा मशरूम क्लाउड बनता है।
 6. Space/Esc दबाकर सीधे प्रहार पर जा सकते हो। सिनेमैटिक के दौरान आपको नुकसान नहीं होगा।
 
-सेटिंग्स: `craterRadius` (4–96), `impactDamage`, `protectOwner`, `chargeSeconds`, `cooldownSeconds`, `range`, `cinematic`
+सेटिंग्स: `craterRadius` (डिफ़ॉल्ट 52, यानी 104 चौड़ा), `craterDepth` (डिफ़ॉल्ट 96 गहरा), `impactDamage`, `protectOwner`, `chargeSeconds`, `cooldownSeconds`, `range`, `cinematic`
 
 ### स्पेस शटल
 1. **Shift + राइट-क्लिक**: मंज़िल चुनो: स्पेस स्टेशन → चाँद → मंगल → पृथ्वी (घर) → पृथ्वी (नई जगह)।

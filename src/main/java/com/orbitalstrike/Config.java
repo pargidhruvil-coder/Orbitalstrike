@@ -10,6 +10,7 @@ public class Config {
     public static final ForgeConfigSpec.IntValue COOLDOWN_SECONDS;
     public static final ForgeConfigSpec.IntValue RANGE;
     public static final ForgeConfigSpec.IntValue CRATER_RADIUS;
+    public static final ForgeConfigSpec.IntValue CRATER_DEPTH;
     public static final ForgeConfigSpec.DoubleValue IMPACT_DAMAGE;
     public static final ForgeConfigSpec.BooleanValue PROTECT_OWNER;
     public static final ForgeConfigSpec.BooleanValue OVERWORLD_GALAXY;
@@ -25,7 +26,9 @@ public class Config {
         CHARGE_SECONDS = b.comment("Seconds of right-click charging needed before the gun can fire")
                 .defineInRange("chargeSeconds", 2, 1, 10);
         CRATER_RADIUS = b.comment("Crater radius in blocks (bowl shape). The shockwave flattens trees up to 2x this. Big values can lag.")
-                .defineInRange("craterRadius", 48, 4, 96);
+                .defineInRange("craterRadius", 52, 4, 128);
+        CRATER_DEPTH = b.comment("How deep the crater goes below the target, in blocks (default 96 -> 104 x 96 x 104 crater)")
+                .defineInRange("craterDepth", 96, 4, 160);
         IMPACT_DAMAGE = b.comment("Damage at the centre of the impact (falls off with distance)")
                 .defineInRange("impactDamage", 400.0D, 0.0D, 5000.0D);
         PROTECT_OWNER = b.comment("The shooter is immune to their own strike and protected during the cinematic")

@@ -1,81 +1,147 @@
 package com.orbitalstrike.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 /**
- * एलियन क्रूज़र "स्टिंग-रे": चपटा हीरे जैसा ढाँचा, दो बड़े पंख, ऊपर पूँछ-पंख, हरी लाइटें, नीचे बड़ी तोप।
- * नाक +Z की तरफ़ है, नाक में खुलने वाला दरवाज़ा (हैंगर)। 1 यूनिट = 1 ब्लॉक (scale से बड़ा-छोटा)।
+ * एलियन "महल-जहाज़": सबसे आगे बड़ा एलियन चेहरा (चमकती सफ़ेद आँखें, दाँत, बैंगनी सींग),
+ * पीछे खंभों वाले दो डेक, चमकती बैंगनी खिड़कियाँ, दो मीनारें, पीछे इंजन, नीचे तोप।
+ * चेहरा +Z (आगे) की तरफ़। दरवाज़ा दाईं (+X) तरफ़ आगे के पास। 1 यूनिट = 1 ब्लॉक।
  */
 public final class ShipModel {
     private ShipModel() {}
+
+    public static final float CANNON_Y = -7.4F;
+    public static final float CANNON_Z = -4.0F;
 
     private static void b(PoseStack ps, MultiBufferSource buf, Block bl, float x, float y, float z, float sx, float sy, float sz) {
         FxDraw.box(ps, buf, bl, x, y, z, sx, sy, sz);
     }
 
-    /**
-     * @param door   0 = बंद, 1 = पूरा खुला
-     * @param glow   0..1 तोप की चमक
-     * @param blink  लाइटें जलें/बुझें
-     */
     public static void render(PoseStack ps, MultiBufferSource buf, float scale, float door, float glow, boolean blink) {
         ps.pushPose();
         ps.scale(scale, scale, scale);
-        Block hull = Blocks.BLACK_CONCRETE, hull2 = Blocks.PURPLE_CONCRETE, trim = Blocks.CRYING_OBSIDIAN,
-                light = Blocks.VERDANT_FROGLIGHT, eng = Blocks.SEA_LANTERN, glass = Blocks.TINTED_GLASS;
+        Block K = Blocks.BLACK_CONCRETE, G = Blocks.GRAY_CONCRETE, Q = Blocks.SMOOTH_QUARTZ, QP = Blocks.QUARTZ_PILLAR,
+                A = Blocks.AMETHYST_BLOCK, P = Blocks.PURPLE_CONCRETE, WIN = Blocks.PURPLE_STAINED_GLASS, W = Blocks.WHITE_CONCRETE;
+        Block win = blink ? A : P;
 
-        // मुख्य ढाँचा: पीछे से आगे पतला होता हुआ (सीढ़ीनुमा)
-        for (int i = 0; i < 8; i++) {
-            float z = -8 + i * 2;
-            float w = 9 - Math.abs(i - 3) * 1.3F;
-            float h = 2.4F - Math.abs(i - 3) * 0.22F;
-            b(ps, buf, i % 2 == 0 ? hull : hull2, -w / 2, -h / 2, z, w, h, 2.0F);
+        // ---- निचला ढाँचा
+        b(ps, buf, K, -5.5F, -4, -22, 11, 4, 34);
+        b(ps, buf, K, -4, -5.5F, -20, 8, 1.5F, 30);
+        b(ps, buf, A, -3, -5.7F, -18, 6, 0.25F, 26);
+        for (float z = -20; z < 11; z += 2) {
+            b(ps, buf, win, -5.62F, -3, z + 0.4F, 0.15F, 1.6F, 1.2F);
+            b(ps, buf, win, 5.47F, -3, z + 0.4F, 0.15F, 1.6F, 1.2F);
         }
-        // ऊपर कॉकपिट गुंबद
-        b(ps, buf, glass, -1.5F, 1.0F, 0, 3, 0.9F, 4);
-        b(ps, buf, trim, -1.7F, 0.9F, -0.2F, 3.4F, 0.2F, 4.4F);
-        // पंख (बाएँ-दाएँ), पीछे की ओर झुके हुए
-        for (int s = -1; s <= 1; s += 2) {
-            ps.pushPose();
-            ps.translate(s * 3.5F, -0.2F, -2.0F);
-            ps.mulPose(Axis.YP.rotationDegrees(s * 28));
-            b(ps, buf, hull, s > 0 ? 0 : -9, -0.25F, -2.5F, 9, 0.5F, 5);
-            b(ps, buf, hull2, s > 0 ? 0 : -9, 0.25F, -1.5F, 9, 0.12F, 3);
-            b(ps, buf, trim, s > 0 ? 8.5F : -9.0F, -0.4F, -2.6F, 0.6F, 0.8F, 5.2F);
-            if (blink) b(ps, buf, light, s > 0 ? 8.7F : -9.1F, -0.15F, 2.2F, 0.4F, 0.3F, 0.4F);
-            ps.popPose();
+        // ---- पहला डेक: खंभे + अंदर की दीवार + खिड़कियाँ
+        b(ps, buf, Q, -5.8F, 0, -22.3F, 11.6F, 0.5F, 34.6F);
+        b(ps, buf, K, -4.2F, 0.5F, -21, 8.4F, 3, 32);
+        for (float z = -20.5F; z < 11; z += 1.6F) {
+            b(ps, buf, QP, -5.3F, 0.5F, z, 0.6F, 3, 0.6F);
+            b(ps, buf, QP, 4.7F, 0.5F, z, 0.6F, 3, 0.6F);
+            b(ps, buf, WIN, -4.27F, 1.1F, z + 0.1F, 0.1F, 1.9F, 1.0F);
+            b(ps, buf, WIN, 4.17F, 1.1F, z + 0.1F, 0.1F, 1.9F, 1.0F);
         }
-        // पूँछ-पंख (ऊपर)
-        b(ps, buf, hull2, -0.25F, 1.0F, -8.5F, 0.5F, 3.2F, 3.0F);
-        b(ps, buf, trim, -0.3F, 4.0F, -8.6F, 0.6F, 0.3F, 2.0F);
-        if (blink) b(ps, buf, light, -0.2F, 4.2F, -8.0F, 0.4F, 0.4F, 0.4F);
-        // इंजन (पीछे)
+        b(ps, buf, Q, -5.8F, 3.5F, -22.3F, 11.6F, 0.6F, 34.6F);
+        b(ps, buf, A, -5.85F, 3.65F, -22.35F, 11.7F, 0.22F, 34.7F);
+        b(ps, buf, K, -5.5F, 4.1F, -22, 11, 0.5F, 34);
+        // ---- दूसरा डेक
+        b(ps, buf, K, -3, 4.6F, -18, 6, 2.4F, 26);
+        for (float z = -17.5F; z < 7; z += 1.6F) {
+            b(ps, buf, QP, -3.6F, 4.6F, z, 0.5F, 2.4F, 0.5F);
+            b(ps, buf, QP, 3.1F, 4.6F, z, 0.5F, 2.4F, 0.5F);
+            b(ps, buf, win, -3.05F, 5.1F, z + 0.1F, 0.1F, 1.5F, 0.9F);
+            b(ps, buf, win, 2.95F, 5.1F, z + 0.1F, 0.1F, 1.5F, 0.9F);
+        }
+        b(ps, buf, Q, -3.9F, 7, -18.3F, 7.8F, 0.5F, 26.6F);
+        b(ps, buf, A, -3.95F, 7.1F, -18.35F, 7.9F, 0.2F, 26.7F);
+        // आगे का सीढ़ीनुमा छज्जा
+        for (int i = 0; i < 4; i++) {
+            b(ps, buf, i == 3 ? A : Q, -3.8F + i * 0.9F, 7.5F + i * 0.5F, 6.4F, 7.6F - i * 1.8F, 0.5F, 1.6F);
+        }
+        // ---- मीनारें
+        spire(ps, buf, 0, 7.5F, 2, K, Q, A);
+        spire(ps, buf, 0, 7.5F, -15, K, Q, A);
+        // ---- सबसे आगे बड़ा एलियन चेहरा
+        b(ps, buf, K, -5, -5, 12, 10, 12, 8);
+        b(ps, buf, K, -5.4F, 3, 19.4F, 10.8F, 1.2F, 1.0F);                 // भौंहें
+        b(ps, buf, W, -3.9F, 1.5F, 20.0F, 2.7F, 1.3F, 0.3F);               // आँखें
+        b(ps, buf, W, 1.2F, 1.5F, 20.0F, 2.7F, 1.3F, 0.3F);
+        for (int i = -4; i < 4; i++) {                                     // दाँत
+            b(ps, buf, (i & 1) == 0 ? W : G, i + 0.1F, (i & 1) == 0 ? -2.8F : -2.4F, 20.0F, 0.8F, 0.9F, 0.3F);
+        }
+        b(ps, buf, G, -5.25F, -1.2F, 17.5F, 0.4F, 2.2F, 2.2F);              // गाल
+        b(ps, buf, G, 4.85F, -1.2F, 17.5F, 0.4F, 2.2F, 2.2F);
+        b(ps, buf, A, -5.3F, 0.6F, 13.5F, 0.35F, 1.5F, 1.5F);
+        b(ps, buf, A, 4.95F, 0.6F, 13.5F, 0.35F, 1.5F, 1.5F);
+        b(ps, buf, K, -4, -5.8F, 13, 8, 0.8F, 6.5F);                       // ठोड़ी
+        b(ps, buf, P, -5.7F, 6.2F, 15, 1.3F, 1.3F, 1.3F);                  // सींग
+        b(ps, buf, A, -6.2F, 7.3F, 15.8F, 1.0F, 1.2F, 1.0F);
+        b(ps, buf, P, 4.4F, 6.2F, 15, 1.3F, 1.3F, 1.3F);
+        b(ps, buf, A, 5.2F, 7.3F, 15.8F, 1.0F, 1.2F, 1.0F);
+        b(ps, buf, G, -3, 7, 17, 1, 1, 1);
+        b(ps, buf, G, 2, 7, 17, 1, 1, 1);
+        b(ps, buf, G, -0.5F, 7, 18, 1, 1.4F, 1);
+        // ---- पीछे इंजन
         for (int s = -1; s <= 1; s++) {
-            b(ps, buf, Blocks.IRON_BLOCK, s * 2.2F - 0.8F, -0.8F, -9.0F, 1.6F, 1.6F, 1.0F);
-            b(ps, buf, eng, s * 2.2F - 0.6F, -0.6F, -9.2F, 1.2F, 1.2F, 0.3F);
+            b(ps, buf, G, s * 3.2F - 1.1F, -3.2F, -23, 2.2F, 2.2F, 1);
+            b(ps, buf, A, s * 3.2F - 0.8F, -2.9F, -23.25F, 1.6F, 1.6F, 0.3F);
         }
-        // हरी लाइट-पट्टियाँ किनारों पर
-        for (int i = 0; i < 6; i++) {
-            float z = -6 + i * 2.2F;
-            if (blink || i % 2 == 0) {
-                b(ps, buf, light, -4.4F + Math.abs(i - 3) * 0.6F, -0.1F, z, 0.25F, 0.25F, 0.6F);
-                b(ps, buf, light, 4.15F - Math.abs(i - 3) * 0.6F, -0.1F, z, 0.25F, 0.25F, 0.6F);
-            }
-        }
-        // नाक का हैंगर दरवाज़ा (दो पल्ले, खुलते हुए अलग होते हैं)
-        float open = door * 1.3F;
-        b(ps, buf, Blocks.POLISHED_BLACKSTONE, -1.4F - open, -0.9F, 7.9F, 1.4F, 1.8F, 0.25F);
-        b(ps, buf, Blocks.POLISHED_BLACKSTONE, 0.0F + open, -0.9F, 7.9F, 1.4F, 1.8F, 0.25F);
-        b(ps, buf, light, -1.5F, 0.95F, 7.95F, 3.0F, 0.12F, 0.2F);
-        if (door > 0.05F) b(ps, buf, eng, -1.2F, -0.8F, 7.0F, 2.4F, 0.1F, 0.8F);   // अंदर की रोशनी
-        // नीचे की बड़ी तोप
-        b(ps, buf, hull, -1.2F, -2.4F, -1.5F, 2.4F, 1.4F, 3.0F);
-        b(ps, buf, trim, -0.9F, -3.2F, -1.2F, 1.8F, 0.8F, 2.4F);
-        b(ps, buf, glow > 0.3F ? Blocks.SHROOMLIGHT : Blocks.AMETHYST_BLOCK, -0.6F, -3.6F, -0.9F, 1.2F, 0.4F, 1.8F);
+        // ---- दाईं तरफ़ का दरवाज़ा (दो पल्ले आगे-पीछे खिसकते हैं)
+        float open = door * 1.6F;
+        b(ps, buf, Q, 5.45F, -3.4F, 3.6F, 0.25F, 3.3F, 4.0F);
+        if (door > 0.05F) b(ps, buf, Blocks.SEA_LANTERN, 5.3F, -3.2F, 3.9F, 0.1F, 2.8F, 3.4F);
+        b(ps, buf, Blocks.POLISHED_BLACKSTONE, 5.6F, -3.2F, 3.85F - open, 0.15F, 2.8F, 1.7F);
+        b(ps, buf, Blocks.POLISHED_BLACKSTONE, 5.6F, -3.2F, 5.55F + open, 0.15F, 2.8F, 1.7F);
+        b(ps, buf, A, 5.6F, -0.35F, 3.7F, 0.2F, 0.2F, 3.8F);
+        // ---- नीचे तोप
+        b(ps, buf, K, -2, -6.2F, CANNON_Z - 2, 4, 1.4F, 4);
+        b(ps, buf, G, -1.4F, -7, CANNON_Z - 1.4F, 2.8F, 0.8F, 2.8F);
+        b(ps, buf, glow > 0.3F ? Blocks.SHROOMLIGHT : A, -0.8F, CANNON_Y, CANNON_Z - 0.8F, 1.6F, 0.4F, 1.6F);
         ps.popPose();
+    }
+
+    private static void spire(PoseStack ps, MultiBufferSource buf, float x, float y, float z, Block K, Block Q, Block A) {
+        b(ps, buf, K, x - 0.9F, y, z - 0.9F, 1.8F, 1.5F, 1.8F);
+        b(ps, buf, Q, x - 0.7F, y + 1.5F, z - 0.7F, 1.4F, 0.4F, 1.4F);
+        b(ps, buf, K, x - 0.5F, y + 1.9F, z - 0.5F, 1.0F, 1.6F, 1.0F);
+        b(ps, buf, Q, x - 0.35F, y + 3.5F, z - 0.35F, 0.7F, 0.3F, 0.7F);
+        b(ps, buf, K, x - 0.25F, y + 3.8F, z - 0.25F, 0.5F, 1.2F, 0.5F);
+        b(ps, buf, A, x - 0.2F, y + 5.0F, z - 0.2F, 0.4F, 0.6F, 0.4F);
+    }
+
+    /** चमक (ब्लूम): आँखें, मीनारों की बैंगनी लौ, इंजन, तोप — कैमरे की तरफ़ वाले बिलबोर्ड */
+    public static void renderGlow(PoseStack ps, Camera cam, Vec3 origin, float yawDeg, float scale, float t, float cannonGlow) {
+        float yr = (float) Math.toRadians(yawDeg);
+        FxDraw.begin(true);
+        for (int s = -1; s <= 1; s += 2) {
+            Vec3 eye = origin.add(new Vec3(s * 2.55, 2.15, 20.4).scale(scale).yRot(yr));
+            FxDraw.billboard(ps, cam, eye, 2.2F * scale, FxDraw.fx("glow"), 1F, 1F, 1F, 0.9F, 0);
+        }
+        float flick = 0.8F + 0.2F * (float) Math.sin(t * 0.7);
+        for (float z : new float[]{2, -15}) {
+            Vec3 tip = origin.add(new Vec3(0, 13.4 + Math.sin(t * 0.3 + z) * 0.15, z).scale(scale).yRot(yr));
+            FxDraw.billboard(ps, cam, tip, 1.6F * scale * flick, FxDraw.fx("glow"), 0.75F, 0.3F, 1F, 0.95F, 0);
+            FxDraw.billboard(ps, cam, tip.add(0, 0.9 * scale, 0), 0.9F * scale * flick, FxDraw.fx("glow"), 0.9F, 0.6F, 1F, 0.7F, 0);
+        }
+        for (int s = -1; s <= 1; s++) {
+            Vec3 eng = origin.add(new Vec3(s * 3.2, -1.9, -23.5).scale(scale).yRot(yr));
+            FxDraw.billboard(ps, cam, eng, 1.6F * scale, FxDraw.fx("glow"), 0.7F, 0.35F, 1F, 0.8F, 0);
+        }
+        if (cannonGlow > 0) {
+            Vec3 gun = origin.add(new Vec3(0, CANNON_Y - 0.3, CANNON_Z).scale(scale).yRot(yr));
+            FxDraw.billboard(ps, cam, gun, (1 + cannonGlow * 6) * scale, FxDraw.fx("glow"), 0.75F, 0.4F, 1F, 0.3F + cannonGlow * 0.7F, 0);
+            FxDraw.billboard(ps, cam, gun, (0.5F + cannonGlow * 2.5F) * scale, FxDraw.fx("glow"), 1F, 1F, 1F, cannonGlow, 0);
+        }
+        FxDraw.end();
+    }
+
+    /** दुनिया में तोप की जगह */
+    public static Vec3 cannonWorld(Vec3 origin, float yawDeg, float scale) {
+        return origin.add(new Vec3(0, CANNON_Y, CANNON_Z).scale(scale).yRot((float) Math.toRadians(yawDeg)));
     }
 }

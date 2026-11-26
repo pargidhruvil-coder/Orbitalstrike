@@ -84,7 +84,8 @@ public class ClientFx {
             if (tl.vajraStart < 0) return null;
             float t = time(partial);
             if (t < tl.vajraStart || t > tl.impact + 70) return null;
-            Vec3 hover = pos.add(0, topY() + 30, 0);
+            Vec3 cannonOff = new Vec3(0, 0, ShipModel.CANNON_Z * SHIP_SCALE).yRot((float) Math.toRadians(SHIP_YAW));
+            Vec3 hover = pos.add(-cannonOff.x, topY() + 30, -cannonOff.z);
             if (t > tl.impact + 20) {           // प्रहार के बाद शिप ऊपर निकल जाता है
                 float p = (t - tl.impact - 20) / 50F;
                 return hover.add(p * p * 60, p * p * 160, 0);
@@ -102,10 +103,12 @@ public class ClientFx {
         }
 
         public float shipYaw(float partial) {
-            float t = time(partial);
-            return t < tl.vajraStart + 70 ? -65 : -65 + (t - tl.vajraStart - 70) * 0.15F;
+            return SHIP_YAW;
         }
     }
+
+    public static final float SHIP_SCALE = 1.6F;
+    public static final float SHIP_YAW = -65F;
 
     public static final Map<Integer, StrikeFx> ACTIVE = new HashMap<>();
 
@@ -202,14 +205,10 @@ public class ClientFx {
             Vec3 cp = cam.getPosition();
             ps.translate(sp.x - cp.x, sp.y - cp.y, sp.z - cp.z);
             ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(fx.shipYaw(pt)));
-            ShipModel.render(ps, buf, 3.0F, 0, glow, ((int) (t / 8)) % 2 == 0);
+            ShipModel.render(ps, buf, SHIP_SCALE, 0, glow, ((int) (t / 8)) % 2 == 0);
             ps.popPose();
             buf.endBatch();
-            FxDraw.begin(true);
-            Vec3 gun = sp.add(0, -11, 0);
-            FxDraw.billboard(ps, cam, gun, 2 + glow * 16, GLOW, 0.7F, 0.4F, 1F, 0.3F + glow * 0.7F, 0);
-            FxDraw.billboard(ps, cam, gun, 1 + glow * 6, GLOW, 1F, 1F, 1F, glow, 0);
-            FxDraw.end();
+            ShipModel.renderGlow(ps, cam, sp, fx.shipYaw(pt), SHIP_SCALE, t, glow);
         }
 
         // ऑर्बिटल बीम
@@ -219,7 +218,7 @@ public class ClientFx {
             float a = beamIn * beamOut;
             float pulse = 1 + 0.15F * Mth.sin(t * 1.3F);
             Vec3 shipNow = fx.shipPos(pt);
-            float h = shipNow != null ? (float) (shipNow.y - 11 - c.y) : (float) (topY - c.y) + 10;
+            float h = shipNow != null ? (float) (ShipModel.cannonWorld(shipNow, SHIP_YAW, SHIP_SCALE).y - c.y) : (float) (topY - c.y) + 10;
             float rr = t < tl.impact ? 0.4F + beamIn * 1.2F : 6F * pulse;
             FxDraw.begin(true);
             FxDraw.cylinder(ps, cam, c, h, rr, BEAM, 1F, 1F, 1F, a, -t * 0.08F);

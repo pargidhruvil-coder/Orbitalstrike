@@ -241,8 +241,9 @@ public class CinematicDirector {
                 0.5 * (2 * p1.z + (-p0.z + p2.z) * t + (2 * p0.z - 5 * p1.z + 4 * p2.z - p3.z) * t2 + (-p0.z + 3 * p1.z - 3 * p2.z + p3.z) * t3));
     }
 
+    // दरवाज़ा शिप की दाईं (+X) तरफ़: लोकल (5.6, -1.8, 5.7) x SHIP_SCALE
     private static final Vec3[] APPROACH_PATH = {
-            SHIP.add(18, 4, 150), SHIP.add(30, 10, 80), SHIP.add(12, 5, 36), SHIP.add(0, 0.4, 20), SHIP.add(0, 0, 13), SHIP.add(0, 0, 7)};
+            SHIP.add(70, 12, 110), SHIP.add(55, 6, 55), SHIP.add(28, 0, 18), SHIP.add(16, -2.7, 8.5), SHIP.add(9.2, -2.7, 8.5), SHIP.add(5, -2.7, 8.5)};
 
     private void camera(Phase ph, int a, boolean cut) {
         Vec3 T = fx.pos;
@@ -250,7 +251,8 @@ public class CinematicDirector {
         double baseAng = Math.atan2(eye.z - T.z, eye.x - T.x);
         switch (ph) {
             case SPACE -> {
-                Vec3 sc = new Vec3(a * 0.02, a * 0.005, -a * 0.05);
+                float u = a / (float) Timeline.APPROACH_START;
+                Vec3 sc = Vec3.ZERO.lerp(APPROACH_PATH[0], u * u * 0.9);
                 sceneSet(sc, cut);
                 Vec3 lk = SHIP.add(30 - a * 0.25, 0, 0);
                 rotTo(eye, eye.add(lk.subtract(sc)), cut);
@@ -259,8 +261,11 @@ public class CinematicDirector {
             case APPROACH -> {
                 float u = ease((a - Timeline.APPROACH_START) / (float) (Timeline.INTERIOR_START - 10 - Timeline.APPROACH_START));
                 Vec3 sc = spline(APPROACH_PATH, u);
+                if (a < Timeline.APPROACH_START + 8) {   // SPACE से जुड़ाव
+                    sc = Vec3.ZERO.lerp(APPROACH_PATH[0], 0.9).lerp(sc, (a - Timeline.APPROACH_START) / 8.0);
+                }
                 sceneSet(sc, cut);
-                Vec3 lk = u < 0.8F ? SHIP : sc.add(0, 0, -10);
+                Vec3 lk = u < 0.72F ? SHIP.add(0, 2, 6) : sc.add(-10, 0, 0);
                 rotTo(eye, eye.add(lk.subtract(sc)), cut);
                 return;
             }
@@ -392,6 +397,10 @@ public class CinematicDirector {
         }
         ps.popPose();
         buf.endBatch();
+        if (!interior) {
+            // आँखों और मीनारों की चमक (कैमरा-सापेक्ष -> दुनिया के निर्देशांक)
+            ShipModel.renderGlow(ps, camera, c.add(SHIP.subtract(sc)), 0, SHIP_SCALE, t, 0);
+        }
     }
 
     private static void box(PoseStack ps, MultiBufferSource buf, Block b, double x, double y, double z, double sx, double sy, double sz) {
